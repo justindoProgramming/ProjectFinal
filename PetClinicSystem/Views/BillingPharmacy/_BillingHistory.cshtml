@@ -1,0 +1,232 @@
+﻿@model List<PetClinicSystem.Models.Billing>
+
+<div class="p-3">
+
+    <h4 class="fw-bold mb-3">Billing History</h4>
+
+    <!-- ===================== FILTERS CARD ===================== -->
+    <div class="card shadow-sm p-3 mb-4 rounded-4">
+        <div class="row g-3">
+
+            <!-- Date From -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">From</label>
+                <input type="date" id="filterFrom" class="form-control">
+            </div>
+
+            <!-- Date To -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">To</label>
+                <input type="date" id="filterTo" class="form-control">
+            </div>
+
+            <!-- Auto-complete Search -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Search</label>
+
+                <input list="historySuggestions"
+                       id="searchHistory"
+                       class="form-control"
+                       placeholder="Search pet, owner, service...">
+
+                <datalist id="historySuggestions"></datalist>
+            </div>
+
+            <!-- Apply Button -->
+            <div class="col-md-2">
+                <button class="btn btn-success w-100 mt-4"
+                        onclick="applyHistoryFilter()">
+                    Apply
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================== EXPORT BUTTONS ===================== -->
+    <div class="d-flex gap-2 mb-3">
+
+        <button class="btn btn-outline-success"
+                onclick="exportExcel()">
+            <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+        </button>
+
+    </div>
+
+    <!-- ===================== RESULTS ===================== -->
+    <div class="row g-3" id="historyResult">
+
+        @foreach (var b in Model)
+        {
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 rounded-4 billing-card">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">@b.ServiceName</h5>
+                        <span class="badge bg-primary fs-6">₱@b.Total</span>
+                    </div>
+
+                    <p class="mt-2 mb-1"><b>Pet:</b> @b.Pet.Name</p>
+                    <p class="mb-1"><b>Owner:</b> @b.Pet.Owner.FullName</p>
+                    <p class="mb-1"><b>Staff:</b> @b.Staff.FullName</p>
+
+                    <p class="text-secondary small mb-0">
+                        @b.BillingDate.ToString("MMM dd, yyyy • hh:mm tt")
+                    </p>
+
+                </div>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+<!-- ===================== STYLES ===================== -->
+<style>
+    .billing-card {
+        transition: 0.25s ease;
+    }
+
+        .billing-card:hover {
+            background: #f7fbff;
+            transform: translateY(-3px);
+        }
+</style>
+
+<!-- ===================== JS LOGIC ===================== -->
+<script>
+    (function () {
+        // Debounce helper
+        function debounce(fn, wait) {
+            let t;
+            return function () {
+                clearTimeout(t);
+                const args = arguments;
+                t = setTimeout(() => fn.apply(this, args), wait);
+            };
+        }
+
+        // SMALL UI HELPERS
+        function showBpToast(message, type = 'success') {
+            // Reuse your existing toast area (bpToast) if present
+            try {
+                if (typeof showPublicToast === 'function') { showPublicToast(message, type); return; }
+            } catch (e) { /* ignore */ }
+
+            const el = document.getElementById('bpToastMsg');
+            if (el) {
+                el.textContent = message;
+                const toastEl = document.getElementById('bpToast');
+                if (toastEl) new bootstrap.Toast(toastEl).show();
+            } else {
+                alert(message);
+            }
+        }
+
+        // -------------------------------
+        // AUTOCOMPLETE SEARCH (datalist)
+        // -------------------------------
+        const $search = $("#searchHistory");
+        const $datalist = $("#historySuggestions");
+
+        const fetchSuggestions = debounce(function () {
+            const term = ($search.val() || "").trim();
+            if (!term) {
+                $datalist.empty();
+                return;
+            }
+
+            $.getJSON("/BillingPharmacy/SearchHistory", { term: term })
+                .done(function (results) {
+                    $datalist.empty();
+                    if (!Array.isArray(results) || results.length === 0) return;
+                    results.forEach(r => {
+                        // create option elements for datalist
+                        $datalist.append($("<option>").attr("value", r));
+                    });
+                })
+                .fail(function () {
+                    // silent fail
+                    console.error("SearchHistory failed");
+                });
+        }, 250);
+
+        $search.on("input", fetchSuggestions);
+
+        // -------------------------------
+        // APPLY FILTERS
+        // -------------------------------
+        const $from = $("#filterFrom");
+        const $to = $("#filterTo");
+        const $result = $("#historyResult");
+
+        function showLoading() {
+            $result.html('<div class="text-center p-4 text-muted">Loading…</div>');
+        }
+
+        function applyHistoryFilter() {
+            // read values
+            const start = ($from.val() || "").trim();
+            const end = ($to.val() || "").trim();
+            const search = ($search.val() || "").trim();
+
+            // validate dates
+            if (start && end) {
+                const s = new Date(start);
+                const e = new Date(end);
+                if (s > e) {
+                    showBpToast("Invalid date range: 'From' must be before or equal to 'To'.", "error");
+                    return;
+                }
+            }
+
+            showLoading();
+
+            $.ajax({
+                url: "/BillingPharmacy/FilterHistory",
+                method: "POST",
+                data: {
+                    startDate: start,
+                    endDate: end,
+                    search: search
+                }
+            })
+            .done(function (html) {
+                // server returns rendered partial HTML
+                $result.html(html);
+            })
+            .fail(function (xhr) {
+                console.error("FilterHistory error", xhr);
+                showBpToast("Unable to apply filter. Please try again.", "error");
+                $result.html('<div class="text-center p-4 text-danger">Error loading history.</div>');
+            });
+        }
+
+        // wire apply button
+        window.applyHistoryFilter = applyHistoryFilter;
+
+        // -------------------------------
+        // EXPORT (include current filters)
+        // -------------------------------
+        window.exportExcel = function () {
+            const start = encodeURIComponent($from.val() || "");
+            const end = encodeURIComponent($to.val() || "");
+            const search = encodeURIComponent($search.val() || "");
+            // Redirect to ExportHistoryExcel with querystring so server can re-apply filter
+            window.location.href = `/BillingPharmacy/ExportHistoryExcel?startDate=${start}&endDate=${end}&search=${search}`;
+        };
+
+        // initial wiring for the Apply button (if you use inline onclick it's already fine)
+        // but we protect against double submissions: disable while request in-flight
+        $(document).on('click', 'button[onclick="applyHistoryFilter()"]', function (e) {
+            const $btn = $(this);
+            $btn.prop('disabled', true);
+            Promise.resolve().then(() => {
+                applyHistoryFilter();
+                setTimeout(() => $btn.prop('disabled', false), 800);
+            });
+        });
+
+    })();
+</script>

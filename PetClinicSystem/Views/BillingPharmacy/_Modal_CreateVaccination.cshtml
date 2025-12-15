@@ -1,0 +1,86 @@
+﻿@model PetClinicSystem.Models.Vaccination
+
+@{
+    var pets = ViewBag.Pets as List<PetClinicSystem.Models.Pet> ?? new List<PetClinicSystem.Models.Pet>();
+    var staff = ViewBag.Staff as List<PetClinicSystem.Models.Account> ?? new List<PetClinicSystem.Models.Account>();
+    var services = ViewBag.VaccinationServices as List<PetClinicSystem.Models.Service> ?? new List<PetClinicSystem.Models.Service>();
+
+    string dateGiven = Model.DateGiven?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd");
+    string nextDue = Model.NextDueDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddYears(1).ToString("yyyy-MM-dd");
+}
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Record Vaccination</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="createVaccinationForm"
+      method="post"
+      action="@Url.Action("CreateVaccination", "BillingPharmacy")">
+    <div class="modal-body">
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Pet</label>
+                <select name="PetId" class="form-select" required>
+                    <option value="">Select pet...</option>
+                    @foreach (var p in pets)
+                    {
+                        <option value="@p.PetId">@p.Name - @p.PetCode (@p.Owner?.FullName)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Doctor</label>
+
+                @* Only render accounts that are NOT system admin (IsAdmin != 1) *@
+                <select name="StaffId" class="form-select" required>
+                    <option value="">Select doctor...</option>
+
+                    @foreach (var s in staff)
+                    {
+                        if (s == null) { continue; }
+                        // skip system admin accounts
+                        if (s.IsAdmin == 1) { continue; }
+
+                        <option value="@s.AccountId">@s.FullName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Vaccination Service</label>
+                <select name="VaccineName" class="form-select" required>
+                    <option value="">Select vaccination service…</option>
+                    @foreach (var svc in services)
+                    {
+                        <option value="@svc.Name">@svc.Name — ₱@svc.Price.ToString("0.00")</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Date Given</label>
+                <input type="date"
+                       name="DateGiven"
+                       class="form-control"
+                       value="@dateGiven" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Next Due</label>
+                <input type="date"
+                       name="NextDueDate"
+                       class="form-control"
+                       value="@nextDue" />
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success">Save</button>
+    </div>
+</form>

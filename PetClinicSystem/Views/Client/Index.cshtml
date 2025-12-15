@@ -1,0 +1,141 @@
+﻿@{
+    Layout = "_Layout_Client";
+
+    var pets = ViewBag.MyPets;
+    var upcoming = ViewBag.Upcoming;
+    var vaccines = ViewBag.Vaccines;
+}
+
+<h3 class="fw-bold mb-2">Welcome!</h3>
+<p class="text-secondary mb-4">Here's an overview of your pets and activity.</p>
+
+<!-- KPI CARDS -->
+<div class="row g-4 mb-4">
+
+    <!-- My Pets -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-success text-white me-3">
+                <i class="fa-solid fa-paw"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">My Pets</div>
+                <div class="fw-bold fs-4">@pets.Count</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-primary text-white me-3">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">Today's Appointments</div>
+                <div class="fw-bold fs-4">@upcoming.Count</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vaccinations -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-warning text-white me-3">
+                <i class="fa-solid fa-syringe"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">Vaccinations Due</div>
+                <div class="fw-bold fs-4">@vaccines.Count</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <!-- Upcoming Appointments Panel -->
+    <div class="col-lg-8">
+        <div class="card p-4 shadow-sm rounded-4 border-0">
+
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="fw-bold mb-0">Upcoming Appointments</h5>
+                <a href="/Appointments/Index" class="text-primary fw-semibold">View All</a>
+            </div>
+
+            @if (upcoming.Count == 0)
+            {
+                <p class="text-secondary">No upcoming appointments.</p>
+            }
+            else
+            {
+                foreach (var a in upcoming)
+                {
+                    <div class="appointment-card p-3 rounded-3 mb-3">
+
+                        <div class="d-flex justify-content-between">
+
+                            <div>
+                                <div class="fw-bold">@a.Pet?.Name</div>
+
+                                <div class="text-secondary small">
+                                    @(a.Service?.Name ?? a.ServiceName ?? "No service")
+                                </div>
+
+                                <div class="text-muted small">
+                                    @a.ScheduleDateOld?.ToString("MMM dd, yyyy")
+                                    
+                                    @(
+                                                                a.Slot != null
+                                                                ? $"{a.Slot.StartTime:hh\\:mm} - {a.Slot.EndTime:hh\\:mm}"
+                                                                : ""
+                                                                )
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <span class="badge bg-info text-white fw-semibold">
+                                    @(a.Status ?? "Upcoming")
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+            }
+
+        </div>
+    </div>
+
+    <!-- Vaccination Panel -->
+    <div class="col-lg-4">
+        <div class="card p-4 shadow-sm rounded-4 border-0">
+
+            <h5 class="fw-bold mb-3">Vaccination Reminders</h5>
+
+            @if (vaccines.Count == 0)
+            {
+                <p class="text-secondary">No vaccines due.</p>
+            }
+            else
+            {
+                foreach (var v in vaccines)
+                {
+                    <div class="patient-card p-3 rounded-3 mb-2 d-flex justify-content-between">
+                        <div>
+                            <div class="fw-bold">@v.Pet?.Name</div>
+                            <div class="small text-secondary">@v.VaccineName</div>
+                        </div>
+
+                        <span class="badge bg-light border-warning text-warning">
+                            @v.NextDueDate?.ToString("MMM dd")
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>

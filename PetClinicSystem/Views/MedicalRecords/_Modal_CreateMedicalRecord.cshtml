@@ -1,0 +1,86 @@
+﻿@model PetClinicSystem.Models.MedicalRecord
+@using PetClinicSystem.Models
+
+@{
+    var pets = ViewBag.Pets as List<Pet>;
+    var staff = ViewBag.Staff as List<Account>;
+}
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">New Medical Record</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="createRecordForm"
+      method="post"
+      action="@Url.Action("Create", "MedicalRecords")">
+
+    <div class="modal-body">
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Pet</label>
+                <select name="PetId" class="form-select" required>
+                    <option value="">Select pet...</option>
+                    @if (pets != null)
+                    {
+                        foreach (var p in pets)
+                        {
+                            <option value="@p.PetId">
+                                @p.Name - @p.PetCode (@p.Owner.FullName)
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Doctor / Staff</label>
+                <select name="StaffId" class="form-select" required>
+                    <option value="">Select staff...</option>
+                    @if (staff != null)
+                    {
+                        foreach (var s in staff)
+                        {
+                            <option value="@s.AccountId">
+                                @s.FullName
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Date</label>
+                <input type="date"
+                       name="Date"
+                       class="form-control"
+                       value="@(Model.Date.HasValue? Model.Date.Value.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea name="Description" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold">Diagnosis</label>
+                <textarea name="Diagnosis" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold">Treatment</label>
+                <textarea name="Treatment" class="form-control" rows="2"></textarea>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary"
+                data-bs-dismiss="modal">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-success">Save Record</button>
+    </div>
+</form>

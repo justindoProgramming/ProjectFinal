@@ -1,0 +1,220 @@
+﻿@model List<PetClinicSystem.Models.Schedule>
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Appointments";
+
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+
+    Layout = role switch
+    {
+        1 => "~/Views/Shared/_Layout_Admin.cshtml",
+        2 => "~/Views/Shared/_Layout_Staff.cshtml",
+        0 => "~/Views/Shared/_Layout_Client.cshtml",
+        _ => "~/Views/Shared/_Layout_Public.cshtml"
+    };
+}
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Appointments</h3>
+
+        <div class="d-flex gap-2">
+            <input id="searchBox"
+                   type="text"
+                   class="form-control"
+                   placeholder="Search appointments..."
+                   style="max-width: 250px;" />
+
+            <button class="btn btn-outline-secondary" onclick="applySearch()">Search</button>
+
+            <button class="btn btn-success" onclick="loadCreate()">
+                <i class="fa-solid fa-plus"></i> New Appointment
+            </button>
+        </div>
+    </div>
+
+    <!-- NAV TABS -->
+    <ul class="nav nav-tabs mb-4" id="apptTabs">
+        <li class="nav-item">
+            <a class="nav-link active" onclick="showTab('allTab', this)">All</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" onclick="showTab('confirmedTab', this)">Confirmed</a>
+        </li>
+
+       @if (role != 0)   
+{
+    <li class="nav-item">
+        <a class="nav-link" onclick="showTab('reportsTab', this)">Reports</a>
+    </li>
+}
+
+    </ul>
+
+    <!-- TAB: ALL (Urgent pinned first, excluding confirmed) -->
+    <div id="allTab" class="tab-section">
+
+        <div class="row g-3">
+            @foreach (var appt in Model
+                        .Where(x => x.Status?.ToLower() != "confirmed")
+                        .OrderByDescending(x => x.Status?.ToLower() == "urgent")
+                        .ThenBy(x => x.ScheduleDateOld)
+                        .ThenBy(x => x.Slot.StartTime))
+            {
+                @Html.Partial("_AppointmentCard", appt)
+            }
+        </div>
+
+    </div>
+
+    <!-- TAB: CONFIRMED -->
+    <div id="confirmedTab" class="tab-section" style="display:none;">
+        <div class="row g-3">
+            @foreach (var appt in Model.Where(x => x.Status?.ToLower() == "confirmed"))
+            {
+                @Html.Partial("_AppointmentCard", appt)
+            }
+        </div>
+    </div>
+
+    <!-- TAB: REPORTS -->
+    <div id="reportsTab" class="tab-section" style="display:none;">
+
+        <h4 class="fw-bold mb-3">Reports</h4>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-semibold">Appointments Per Day</h6>
+                <canvas id="chartAppointments"></canvas>
+            </div>
+
+            <div class="col-md-6">
+                <h6 class="fw-semibold">Service Popularity</h6>
+                <canvas id="chartServices"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="viewModalContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="createModalContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="editModalContent"></div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <!-- ChartJS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Unified Appointment Logic -->
+    <script src="~/js/appointments.js"></script>
+
+    <script>
+        // =========================================
+        // SEARCH - simple page reload with query
+        // =========================================
+        function applySearch() {
+            const term = document.getElementById("searchBox").value;
+            window.location.href = "/Appointments/Index?search=" + encodeURIComponent(term);
+        }
+
+        // =========================================
+        // TAB CONTROL
+        // =========================================
+        function showTab(id, el) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+
+            document.querySelectorAll('#apptTabs .nav-link').forEach(a => a.classList.remove('active'));
+            el.classList.add('active');
+
+            if (id === "reportsTab")
+                loadReports();
+        }
+
+        // =========================================
+        // MODAL LOADERS (Dynamic Partial Views)
+        // =========================================
+        function loadCreate() {
+            $("#createModalContent").load("/Appointments/Create", () =>
+                new bootstrap.Modal("#createModal").show()
+            );
+        }
+
+        function loadEdit(id) {
+            $("#editModalContent").load("/Appointments/Edit/" + id, () =>
+                new bootstrap.Modal("#editModal").show()
+            );
+        }
+
+        function loadView(id) {
+            $("#viewModalContent").load("/Appointments/ViewAppointment/" + id, () =>
+                new bootstrap.Modal("#viewModal").show()
+            );
+        }
+
+        // =========================================
+        // REPORT CHARTS
+        // =========================================
+        let chartsDrawn = false;
+
+        function loadReports() {
+            if (chartsDrawn) return;
+            chartsDrawn = true;
+
+            // Appointments per day
+            new Chart(document.getElementById("chartAppointments"), {
+                type: "bar",
+                data: {
+                    labels: @Json.Serialize(
+                                            Model.Where(a => a.ScheduleDateOld.HasValue)
+                                                      .GroupBy(a => a.ScheduleDateOld.Value.ToString("MMM dd"))
+                                                      .Select(g => g.Key)
+                                    ),
+                datasets: [{
+                    label: "Appointments",
+                    data: @Json.Serialize(
+                                                Model.Where(a => a.ScheduleDateOld.HasValue)
+                                                          .GroupBy(a => a.ScheduleDateOld.Value)
+                                                          .Select(g => g.Count())
+                                        ),
+                    backgroundColor: "#0d6efd"
+                }]
+            }
+        });
+
+            // Service popularity
+            new Chart(document.getElementById("chartServices"), {
+                type: "pie",
+                data: {
+                    labels: @Json.Serialize(Model.Select(a => a.ServiceName).Distinct()),
+                    datasets: [{
+                        data: @Json.Serialize(Model.GroupBy(a => a.ServiceName).Select(g => g.Count())),
+                        backgroundColor: ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1"]
+                    }]
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,517 @@
+﻿@using PetClinicSystem.Models
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Billing & Pharmacy";
+
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+
+    if (role == 1)
+    {
+        Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    }
+    else if (role == 2)
+    {
+        Layout = "~/Views/Shared/_Layout_Staff.cshtml";
+    }
+    else if (role == 0)
+    {
+        Layout = "~/Views/Shared/_Layout_Client.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout_Public.cshtml";
+    }
+
+    ViewBag.ActiveMenu = "Billing";
+    var pets = ViewBag.Pets as List<Pet> ?? new List<Pet>();
+}
+
+
+<div class="container-fluid py-4">
+
+    <h3 class="fw-bold">Clinic Services</h3>
+    <p class="text-secondary">Manage point of sale, prescriptions, drugs, and vaccinations</p>
+
+    <!-- TABS -->
+    <div class="d-flex justify-content-center my-4 gap-2">
+        <button class="btn tab-btn active" onclick="showTab('pos', this)">Point of Sale</button>
+        <button class="btn tab-btn" onclick="showTab('prescriptions', this)">Prescriptions</button>
+        <button class="btn tab-btn" onclick="showTab('inventory', this)">Inventory</button>
+        <button class="btn tab-btn" onclick="showTab('vaccines', this)">Vaccinations</button>
+    </div>
+
+    <!-- ===================== POS TAB ===================== -->
+    <div id="tab-pos" class="tab-section">
+        <div class="row">
+
+            <!-- LEFT SIDE: SERVICES -->
+            <div class="col-md-8">
+
+                <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                    <h4 class="fw-bold mb-0">Available Services</h4>
+
+                    <div class="d-flex gap-2">
+
+                        <!-- ADD SERVICE BUTTON -->
+                        <button type="button"
+                                class="btn btn-success"
+                                data-bs-toggle="modal"
+                                data-bs-target="#addServiceModal">
+                            <i class="fa-solid fa-plus me-2"></i> Add Service
+                        </button>
+
+                        <!-- BILLING HISTORY BUTTON -->
+                        <button class="btn btn-outline-primary"
+                                onclick="openBillingHistory()">
+                            <i class="fa-solid fa-clock-rotate-left me-2"></i> Billing History
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- SEARCH -->
+                <input id="searchServices"
+                       type="text"
+                       class="form-control mb-3"
+                       placeholder="Search services by name or category...">
+
+                <!-- CATEGORY FILTER -->
+                <ul id="categoryMenu" class="nav nav-pills mb-3 gap-2"></ul>
+
+                <!-- SERVICES GRID -->
+                <div id="serviceGrid" class="row g-3"></div>
+
+            </div>
+
+            <!-- RIGHT SIDE: CART -->
+            @* Staff-only cart. Admin/Client sees an informative disabled card. *@
+            @if (role == 2)
+            {
+                <div class="col-md-4" id="posCartCol">
+                    <div class="card shadow p-3 rounded-4">
+                        <h5 class="fw-bold">Transaction Summary</h5>
+
+                        <!-- SELECT PET -->
+                        <label class="fw-semibold mt-2">Select Pet</label>
+                        <select id="petSelect" class="form-select mb-2">
+                            <option value="">Choose pet...</option>
+                            @foreach (var p in pets)
+                            {
+                                <option value="@p.PetId">@p.Name (@p.Owner?.FullName)</option>
+                            }
+                        </select>
+
+                        <!-- HIDDEN STAFF ID -->
+                        <input type="hidden" id="staffId" value="@Context.Session.GetInt32("UserId")" />
+
+                        <hr />
+
+                        <!-- CART TABLE -->
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>₱</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartTable"></tbody>
+                        </table>
+
+                        <hr />
+
+                        <!-- SUBTOTAL -->
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold">Subtotal:</span>
+                            <span id="subtotal">₱0.00</span>
+                        </div>
+
+                        <!-- PROCESS PAYMENT -->
+                        <button id="checkoutBtn" class="btn btn-success mt-3 w-100" onclick="checkoutPOS()">
+                            <i class="fa-solid fa-cash-register me-2"></i> Process Payment
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="col-md-4" id="posCartCol">
+                    <div class="card shadow p-3 rounded-4 text-center">
+                        <h5 class="fw-bold">Point of Sale</h5>
+                        <p class="text-muted mt-2">POS cart is available for <strong>Staff</strong> only.</p>
+                        <p class="small text-secondary">
+                            You can still view services on the left. To create transactions, please sign in as a staff account.
+                        </p>
+                        <div class="mt-3">
+                            <button class="btn btn-outline-secondary" disabled>
+                                Cart disabled for your role
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+
+
+        
+
+<!-- Bootstrap Toast -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index:2000">
+    <div id="bpToast" class="toast bg-success text-white border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold" id="bpToastMsg">Success</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+    <!-- PRESCRIPTIONS TAB -->
+    <div id="tab-prescriptions" class="tab-section d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0"></h5>
+            <button class="btn btn-success" onclick="loadPrescriptionCreate()">
+                + New Prescription
+            </button>
+
+        </div>
+
+        <div id="prescriptionsList">
+            @await Html.PartialAsync("_Prescriptions",
+            (List<Prescription>)ViewBag.Prescriptions)
+        </div>
+    </div>
+
+    <!-- DRUGS INVENTORY TAB -->
+    <div id="tab-inventory" class="tab-section d-none">
+        <div id="inventoryContainer">
+            @await Html.PartialAsync("_Drugs",
+                        (List<Drug>)ViewBag.Drugs)
+        </div>
+    </div>
+
+    <!-- VACCINATIONS TAB -->
+    <div id="tab-vaccines" class="tab-section d-none">
+        <div id="vaccinationsContainer">
+            @await Html.PartialAsync("_Vaccinations",
+                        (List<Vaccination>)ViewBag.Vaccinations)
+        </div>
+    </div>
+
+</div>
+
+<!-- ADD SERVICE MODAL -->
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Add New Service</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <form id="addServiceForm" onsubmit="return submitNewService(event)">
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Service Name</label>
+                        <input id="newServiceName"
+                               class="form-control"
+                               placeholder="e.g., Grooming, Nail Trim"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <input id="newServiceCategory"
+                               class="form-control"
+                               placeholder="e.g., Grooming / Medical / Lab"
+                               required />
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Price</label>
+                        <input id="newServicePrice"
+                               type="number"
+                               step="0.01"
+                               min="0.01"
+                               class="form-control"
+                               placeholder="e.g., 250.00"
+                               required />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        Save Service
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- PRESCRIPTION MODAL SHELLS -->
+<div class="modal fade" id="prescCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="prescCreateContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="prescViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="prescViewContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="prescEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="prescEditContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="prescDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="prescDeleteContent"></div>
+    </div>
+</div>
+
+<!-- DRUG MODAL SHELLS -->
+<div class="modal fade" id="drugCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="drugCreateContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="drugEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="drugEditContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="drugDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="drugDeleteContent"></div>
+    </div>
+</div>
+
+<!-- VACCINATION MODAL SHELLS -->
+<div class="modal fade" id="vaccCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="vaccCreateContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="vaccViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="vaccViewContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="vaccEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="vaccEditContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="vaccDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="vaccDeleteContent"></div>
+    </div>
+</div>
+
+<!-- Toast notification for Billing & Pharmacy -->
+<div id="bp-toast" class="bp-toast d-none">
+    <span id="bp-toast-text"></span>
+</div>
+
+<!-- BILLING HISTORY MODAL -->
+<div class="modal fade" id="billingHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="billingHistoryContent"></div>
+    </div>
+</div>
+
+
+<script>
+    function showTab(tab, btn) {
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.add("d-none"));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove("active"));
+
+        document.getElementById("tab-" + tab).classList.remove("d-none");
+        if (btn) btn.classList.add("active");
+
+        if (tab === 'inventory') loadDrugs();
+        else if (tab === 'prescriptions') loadPrescriptions();
+        else if (tab === 'vaccines') loadVaccinations();
+    }
+
+    function showBpToast(message, type) {
+        const toast = document.getElementById("bp-toast");
+        const textEl = document.getElementById("bp-toast-text");
+        if (!toast) return;
+
+        textEl.textContent = message;
+        toast.classList.remove("d-none", "bp-toast-success", "bp-toast-error", "bp-toast-show", "bp-toast-hide");
+
+        toast.classList.add(type === "error" ? "bp-toast-error" : "bp-toast-success");
+        toast.classList.add("bp-toast-show");
+
+        setTimeout(() => {
+            toast.classList.add("bp-toast-hide");
+            setTimeout(() => {
+                toast.classList.add("d-none");
+                toast.classList.remove("bp-toast-show", "bp-toast-hide");
+            }, 300);
+        }, 3000);
+    }
+
+    // ---------------------------
+    // OPEN BILLING HISTORY MODAL
+    // ---------------------------
+    function openBillingHistory() {
+        $("#billingHistoryContent").html("Loading...");
+        $("#billingHistoryContent").load("/BillingPharmacy/History", function () {
+            new bootstrap.Modal(document.getElementById("billingHistoryModal")).show();
+        });
+    }
+
+    // ---------------------------
+    // ADD NEW SERVICE
+    // ---------------------------
+    const name = document.getElementById("newServiceName").value.trim();
+    const price = parseFloat(document.getElementById("newServicePrice").value);
+    const category = document.getElementById("newServiceCategory").value.trim();
+
+    fetch("/BillingPharmacy/AddService", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name: name,
+            price: price,
+            category: category
+        })
+    })
+
+</script>
+
+<style>
+    .tab-btn {
+        background: #f2f2f2;
+        border-radius: 25px;
+        padding: 8px 20px;
+        font-weight: 600;
+    }
+
+        .tab-btn.active {
+            background: #198754;
+            color: white;
+        }
+
+    /* Toast styles */
+    .bp-toast {
+        position: fixed;
+        top: 18px;
+        right: 24px;
+        z-index: 2000;
+        min-width: 260px;
+        max-width: 400px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .bp-toast-show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .bp-toast-hide {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    .bp-toast-success {
+        background-color: #15803d; /* green */
+    }
+
+    .bp-toast-error {
+        background-color: #b91c1c; /* red */
+    }
+
+    /* CATEGORY TABS */
+    #categoryMenu .category-item {
+        padding: 8px 14px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        #categoryMenu .category-item.active {
+            background: #198754;
+            color: white;
+        }
+
+    /* SERVICE CARDS */
+    .service-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.2s;
+        background: #ffffff;
+    }
+
+        .service-card:hover {
+            border-color: #198754;
+            background: #f0fff4;
+        }
+
+    .service-title {
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .service-price {
+        color: #198754;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+</style>
+
+@section Scripts {
+    <script src="~/js/drugs.js"></script>
+    <script src="~/js/prescriptions.js"></script>
+    <script src="~/js/vaccinations.js"></script>
+    @await Html.PartialAsync("_POS_Scripts")
+}

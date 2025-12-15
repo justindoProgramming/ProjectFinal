@@ -1,0 +1,40 @@
+﻿@model PetClinicSystem.Models.Prescription
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-semibold">Prescription Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+    <dl class="row">
+        <dt class="col-sm-3">Date</dt>
+        <dd class="col-sm-9">@Model.Date.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Pet</dt>
+        <dd class="col-sm-9">@Model.Pet?.Name (@Model.Pet?.Owner?.FullName)</dd>
+
+        <dt class="col-sm-3">Doctor</dt>
+        <dd class="col-sm-9">@Model.Staff?.FullName</dd>
+
+        <dt class="col-sm-3">Medication</dt>
+        <dd class="col-sm-9">@Model.Medication</dd>
+
+        <dt class="col-sm-3">Dosage</dt>
+        <dd class="col-sm-9">@Model.Dosage</dd>
+
+        <dt class="col-sm-3">Dosage Interval</dt>
+        <dd class="col-sm-9">@Model.Frequency</dd>
+
+        <dt class="col-sm-3">Duration</dt>
+        <dd class="col-sm-9">@Model.Duration</dd>
+
+        <dt class="col-sm-3">Notes</dt>
+        <dd class="col-sm-9">@Model.Notes</dd>
+    </dl>
+</div>
+
+<div class="modal-footer bg-light border-0">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        Close
+    </button>
+</div>

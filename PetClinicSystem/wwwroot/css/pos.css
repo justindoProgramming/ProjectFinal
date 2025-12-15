@@ -1,0 +1,16 @@
+﻿.serviceCard {
+    position: relative;
+}
+
+.addBtn {
+    height: 32px;
+    width: 32px;
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+}
+
+.cartItem {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}

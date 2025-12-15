@@ -1,0 +1,31 @@
+﻿@model PetClinicSystem.Models.Prescription
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-semibold text-danger">Delete Prescription</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="deletePrescriptionForm"
+      action="@Url.Action("DeletePrescriptionConfirmed", "BillingPharmacy")"
+      method="post">
+
+    <input type="hidden" name="id" value="@Model.PrescriptionId" />
+
+    <div class="modal-body">
+        <p>
+            Are you sure you want to delete the prescription for
+            <strong>@Model.Pet?.Name</strong>
+            (@Model.Pet?.Owner?.FullName)
+            dated <strong>@Model.Date.ToString("yyyy-MM-dd")</strong>?
+        </p>
+    </div>
+
+    <div class="modal-footer bg-light border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-danger">
+            Delete
+        </button>
+    </div>
+</form>

@@ -1,0 +1,286 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>St. Paul Clinic</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+</head>
+
+<body class="bg-white">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg bg-white py-3 border-bottom">
+        <div class="container">
+
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="~/images/logo.jpg"
+                     alt="Logo"
+                     style="height:80px; width:auto;" />
+                <div class="d-flex flex-column lh-sm ms-2">
+                    <span class="fw-bold fs-5">St. Paul Clinic</span>
+                    <span class="text-secondary small">Clinic Management</span>
+                </div>
+            </a>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-link text-dark" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+                <button class="btn btn-success px-4 rounded" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</button>
+            </div>
+
+        </div>
+    </nav>
+
+    <main>
+        @RenderBody()
+
+        <!-- (Optional) you can keep these if you still want inline alerts.
+             If you ONLY want toasts, you can delete this whole container. -->
+        @* 
+        <div class="container mt-4">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                    <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+        *@
+    </main>
+
+    <!-- PUBLIC TOAST (for login/register messages) -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+        <div id="publicToast"
+             class="toast align-items-center text-white border-0"
+             role="alert"
+             aria-live="assertive"
+             aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold"></div>
+                <button type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4 rounded-4 border-0 shadow-lg">
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="fw-bold">Welcome Back</h4>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <p class="text-secondary mb-3">Sign in to your account to continue</p>
+
+                <form method="post" action="/Account/Login">
+
+                    <!-- USERNAME -->
+                    <label class="fw-semibold mb-1">Username</label>
+                    <input type="text"
+                           name="Username"
+                           class="form-control mb-3 py-2 rounded-3"
+                           placeholder="Enter your username"
+                           required />
+
+                    <!-- PASSWORD -->
+                    <label class="fw-semibold mb-1">Password</label>
+                    <input type="password"
+                           name="Password"
+                           class="form-control py-2 rounded-3 mb-3"
+                           placeholder="Enter your password"
+                           required />
+
+                    <div class="d-flex justify-content-between align-items-center mb-3"></div>
+
+                    <button class="btn btn-success w-100 py-2 rounded-3 fw-semibold">
+                        Sign In
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <span class="text-secondary">Don't have an account?</span>
+                        <a class="text-success fw-semibold" data-bs-toggle="modal" data-bs-target="#signupModal">Sign up</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGNUP MODAL -->
+    <div class="modal fade" id="signupModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content p-4 rounded-4 border-0 shadow-lg">
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="fw-bold">Create Your Account</h4>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="/Account/Register">
+
+                    <div class="row g-3">
+
+                        <!-- FULL NAME -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Full Name</label>
+                            <input name="FullName"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Your name.."
+                                   required />
+                        </div>
+
+                        <!-- EMAIL -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Email</label>
+                            <input type="email" name="Email"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="you@example.com"
+                                   required />
+                        </div>
+
+                        <!-- USERNAME -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Username</label>
+                            <input name="Username"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Choose a username"
+                                   required />
+                        </div>
+
+                        <!-- PASSWORD -->
+                        <div class="col-md-12">
+                            <label class="fw-semibold">Password</label>
+                            <input type="password" name="Password"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Create a strong password"
+                                   required />
+                        </div>
+
+                        <!-- PHONE NUMBER -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Phone Number</label>
+                            <input name="PhoneNumber"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="09XXXXXXXXX"
+                                   required />
+                        </div>
+
+                        <!-- ADDRESS -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Address</label>
+                            <input name="Address"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Your address"
+                                   required />
+                        </div>
+
+                        <!-- EMERGENCY CONTACT #1 -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Emergency Contact #1</label>
+                            <input name="EmergencyContact1"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Optional" />
+                        </div>
+
+                        <!-- EMERGENCY CONTACT #2 -->
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Emergency Contact #2</label>
+                            <input name="EmergencyContact2"
+                                   class="form-control py-2 rounded-3"
+                                   placeholder="Optional" />
+                        </div>
+
+                    </div>
+
+                    <button class="btn btn-success w-100 py-2 rounded-3 fw-semibold mt-4">
+                        Create Account
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        // Simple public toast helper
+        function showPublicToast(message, type) {
+            var el = document.getElementById("publicToast");
+            if (!el) {
+                alert(message || "");
+                return;
+            }
+
+            var body = el.querySelector(".toast-body");
+            body.textContent = message || "";
+
+            el.classList.remove("bg-success", "bg-danger", "bg-warning");
+            if (type === "error") {
+                el.classList.add("bg-danger");
+            } else if (type === "warning") {
+                el.classList.add("bg-warning");
+            } else {
+                el.classList.add("bg-success");
+            }
+
+            var toast = bootstrap.Toast.getOrCreateInstance(el);
+            toast.show();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var error = '@TempData["Error"]';
+            var success = '@TempData["Success"]';
+            var openLogin = '@TempData["OpenLoginModal"]';
+
+            if (error && error !== "") {
+                showPublicToast(error, "error");
+                // also open login modal for login errors
+                var modalEl = document.getElementById("loginModal");
+                if (modalEl && window.bootstrap) {
+                    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            } else if (openLogin && openLogin.toLowerCase() === "true") {
+                // fallback: still open modal if explicitly requested
+                var modalEl2 = document.getElementById("loginModal");
+                if (modalEl2 && window.bootstrap) {
+                    var modal2 = bootstrap.Modal.getOrCreateInstance(modalEl2);
+                    modal2.show();
+                }
+            }
+
+            if (success && success !== "") {
+                showPublicToast(success, "success");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+﻿@model List<PetClinicSystem.Models.Pet>
+
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Patient Records";
+
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+
+    // pick layout based on role
+    if (role == 1)
+    {
+        Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    }
+    else if (role == 2)
+    {
+        Layout = "~/Views/Shared/_Layout_Staff.cshtml";
+    }
+    else if (role == 0)
+    {
+        Layout = "~/Views/Shared/_Layout_Client.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout_Public.cshtml";
+    }
+
+    ViewBag.ActiveMenu = "Pets";
+}
+
+<div class="container-fluid py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Pet Records</h3>
+
+        <div class="d-flex gap-2">
+            <input id="searchBox"
+                   class="form-control"
+                   placeholder="Search by name, species, breed, or owner..."
+                   style="max-width: 260px;" />
+
+            <button type="button"
+                    class="btn btn-success"
+                    onclick="loadCreate()">
+                + Add Pet
+            </button>
+        </div>
+    </div>
+
+    <!-- PATIENT CARDS -->
+    <div class="row g-3" id="patientsContainer">
+        @foreach (var p in Model)
+        {
+            var ownerName = p.Owner?.FullName ?? "Unknown owner";
+            var ownerPhone = p.Owner?.PhoneNumber ?? "";
+            var searchText = $"{p.Name} {p.Species} {p.Breed} {ownerName} {ownerPhone}";
+
+            <div class="col-md-6">
+                <div class="card patient-card p-3 shadow-sm rounded-4"
+                     data-search="@searchText">
+                    <div class="d-flex">
+
+                        <!-- Icon -->
+                        <div class="me-3 d-flex align-items-center">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center"
+                                 style="width:50px;height:50px;">
+                                <i class="fa-solid fa-paw"></i>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">@p.Name</h5>
+                            <div class="text-primary small fw-semibold">@p.PetCode</div>
+
+
+                            <div class="text-muted small mb-1">
+                                @p.Species
+                                @if (!string.IsNullOrWhiteSpace(p.Breed))
+                                {
+                                    @: • @p.Breed
+                                }
+                            </div>
+
+                            <div class="small">
+                                <div><span class="fw-semibold">Owner:</span> @ownerName</div>
+                                @if (!string.IsNullOrWhiteSpace(ownerPhone))
+                                {
+                                    <div>@ownerPhone</div>
+                                }
+                            </div>
+
+                            <!-- ACTION BUTTONS -->
+                            <div class="mt-3 d-flex gap-2">
+
+                                <!-- VIEW (ALWAYS VISIBLE) -->
+                                <button type="button"
+                                        class="btn btn-primary btn-sm"
+                                        onclick="loadView(@p.PetId)">
+                                    View
+                                </button>
+
+                                @* ADMIN & STAFF ONLY *@
+                                @if (Context.Session.GetInt32("UserRole") == 1 || Context.Session.GetInt32("UserRole") == 2)
+                                {
+                                    <button type="button"
+                                            class="btn btn-outline-success btn-sm"
+                                            onclick="loadEdit(@p.PetId)">
+                                        Edit
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm"
+                                            onclick="loadDelete(@p.PetId)">
+                                        Delete
+                                    </button>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+<!-- MODAL SHELLS -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" id="createModalContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" id="editModalContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" id="viewModalContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="deleteModalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ================================
+        // 1. CLIENT-SIDE SEARCH
+        // ================================
+        function filterPatients() {
+            var q = ($("#searchBox").val() || "").toLowerCase().trim();
+
+            $(".patient-card").each(function () {
+                var text = ($(this).data("search") || "").toString().toLowerCase();
+
+                if (!q || text.indexOf(q) !== -1) {
+                    $(this).closest(".col-md-6").removeClass("d-none");
+                } else {
+                    $(this).closest(".col-md-6").addClass("d-none");
+                }
+            });
+        }
+
+        // ================================
+        // 2. MODAL HELPERS (jQuery .load)
+        // ================================
+
+        // CREATE
+        function loadCreate() {
+            $("#createModalContent").load("/Pets/Create", function () {
+                var modalEl = document.getElementById("createModal");
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            });
+        }
+
+        // EDIT
+        function loadEdit(id) {
+            $("#editModalContent").load("/Pets/Edit/" + id, function () {
+                var modalEl = document.getElementById("editModal");
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            });
+        }
+
+        // VIEW
+        function loadView(id) {
+            $("#viewModalContent").load("/Pets/Details/" + id, function () {
+                var modalEl = document.getElementById("viewModal");
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            });
+        }
+
+        // DELETE
+        function loadDelete(id) {
+            $("#deleteModalContent").load("/Pets/Delete/" + id, function () {
+                var modalEl = document.getElementById("deleteModal");
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            });
+        }
+
+        // ================================
+        // 3. WIRE-UP ON READY
+        // ================================
+        $(document).ready(function () {
+
+            // live search while typing
+            $("#searchBox").on("input", filterPatients);
+
+            // optional: also filter on Enter
+            $("#searchBox").on("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    filterPatients();
+                }
+            });
+
+            // clean up backdrops if any modal closes
+            document.addEventListener("hidden.bs.modal", function () {
+                document.body.classList.remove("modal-open");
+                document.querySelectorAll(".modal-backdrop").forEach(function (el) {
+                    el.remove();
+                });
+            });
+
+            // show success toast from TempData like before
+            var msg = '@TempData["Success"]';
+            if (msg) {
+                if (window.showSuccessToast) {
+                    window.showSuccessToast(msg);
+                }
+            }
+        });
+    </script>
+}

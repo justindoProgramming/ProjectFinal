@@ -1,0 +1,92 @@
+﻿@model List<PetClinicSystem.Models.Prescription>
+
+<div class="card shadow-sm p-4 rounded-4">
+
+    <!-- REMOVE the top button here (fixed) -->
+    <h4 class="fw-bold mb-3">Prescriptions</h4>
+
+    <!-- SEARCH BAR -->
+    <div class="mb-3">
+        <input type="text"
+               id="prescriptionSearch"
+               class="form-control"
+               placeholder="Search prescriptions..."
+               onkeyup="filterPrescriptions()">
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Owner</th>
+                    <th>Doctor</th>
+                    <th>Medication</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th style="width: 140px;">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="prescriptionTable">
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-secondary py-4">
+                            <i class="fa-regular fa-folder-open fa-2x mb-2"></i>
+                            <p>No prescriptions found.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var p in Model)
+                    {
+                        <tr class="prescription-row">
+                            <td>@p.Date.ToString("MMM dd, yyyy")</td>
+                            <td>@p.Pet?.Name</td>
+                            <td>@p.Pet?.Owner?.FullName</td>
+                            <td>@p.Staff?.FullName</td>
+                            <td>@p.Medication</td>
+                            <td>@p.Dosage</td>
+                            <td>@p.Frequency</td>
+                            <td>@p.Duration</td>
+
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            onclick="loadPrescriptionView(@p.PrescriptionId)">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                    <button class="btn btn-outline-warning btn-sm"
+                                            onclick="loadPrescriptionEdit(@p.PrescriptionId)">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </button>
+
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            onclick="loadPrescriptionDelete(@p.PrescriptionId)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterPrescriptions() {
+        let term = document.getElementById("prescriptionSearch").value.toLowerCase();
+
+        document.querySelectorAll(".prescription-row").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
+        });
+    }
+</script>

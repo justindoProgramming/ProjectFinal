@@ -1,0 +1,152 @@
+﻿@{
+    Layout = "_Layout_Admin";
+}
+
+<div class="container-fluid">
+
+    <h3 class="fw-bold mb-4">Dashboard</h3>
+    <p class="text-secondary mb-4">Welcome back! Here’s what’s happening today.</p>
+
+    <!-- KPI ROW -->
+    <div class="row g-4 mb-4">
+
+        <!-- TOTAL APPOINTMENTS -->
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 rounded-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle bg-primary text-white me-3">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-secondary small">Total Appointments</div>
+                        <div class="fw-bold fs-4">@ViewBag.TotalAppointments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOTAL PET -->
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 rounded-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle bg-success text-white me-3">
+                        <i class="fa-solid fa-paw"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-secondary small">Total Pets</div>
+                        <div class="fw-bold fs-4">@ViewBag.TotalPatients</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVE STAFF -->
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 rounded-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle bg-purple text-white me-3">
+                        <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-secondary small">Active Staff</div>
+                        <div class="fw-bold fs-4">@ViewBag.ActiveStaff</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVENUE -->
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3 rounded-4 border-0">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle bg-warning text-white me-3">
+                        <i class="fa-solid fa-peso-sign"></i>
+                    </div>
+
+                    <div>
+                        <div class="text-secondary small">Revenue</div>
+                        <div class="fw-bold fs-4">₱@ViewBag.Revenue</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN PANELS -->
+    <div class="row g-4">
+
+        <!-- TODAY'S APPOINTMENTS LIST -->
+        <div class="col-lg-8">
+            <div class="card p-4 shadow-sm rounded-4 border-0">
+
+                <div class="d-flex justify-content-between mb-3">
+                    <h5 class="fw-bold">Today's Appointments</h5>
+                    <a href="/Appointments/Index" class="text-primary fw-semibold">View All</a>
+                </div>
+
+                @foreach (var a in ViewBag.TodayAppointments)
+                {
+                    <div class="appointment-card mb-3 p-3 rounded-3">
+
+                        <div class="d-flex justify-content-between">
+
+                            <div>
+                                <div class="fw-bold">@a.Pet?.Name</div>
+                                <div class="text-secondary small">
+                                    @a.Pet?.Species • @a.Staff?.FullName
+                                </div>
+                                <div class="text-muted small">@a.ServiceName</div>
+                            </div>
+
+                            <div class="text-end">
+                                <div class="small text-success fw-bold">
+                                    @(
+                                                                    a.Slot != null
+                                                                    ? $"{a.Slot.StartTime:hh\\:mm} - {a.Slot.EndTime:hh\\:mm}"
+                                                                    : "No Slot"
+                                                                    )
+                                </div>
+
+                                <span class="badge bg-success rounded-pill mt-2">
+                                    @(a.Status ?? "Pending")
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        </div>
+
+        <!-- RECENT PETS -->
+        <div class="col-lg-4">
+            <div class="card p-4 shadow-sm rounded-4 border-0">
+
+                <h5 class="fw-bold mb-3">Recent Pets</h5>
+
+                @foreach (var p in ViewBag.RecentPatients)
+                {
+                    <div class="patient-card d-flex align-items-center justify-content-between p-2 rounded-3 mb-2">
+
+                        <div>
+                            <div class="fw-bold">@p.Name</div>
+                            <div class="small text-secondary">@p.Species</div>
+                        </div>
+                    </div>
+                }
+
+                <a href="/Pets/Index" class="btn btn-outline-primary w-100 mt-3 rounded-3">
+                    View All Pet
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>

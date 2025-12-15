@@ -1,0 +1,28 @@
+﻿@model PetClinicSystem.Models.Vaccination
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold text-danger">Delete Vaccination</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="deleteVaccinationForm"
+      method="post"
+      action="@Url.Action("DeleteVaccinationConfirmed", "BillingPharmacy")">
+    <input type="hidden" name="id" value="@Model.VaccinationId" />
+
+    <div class="modal-body">
+        <p>Are you sure you want to delete this vaccination record?</p>
+        <p class="mb-0">
+            <strong>@Model.Pet?.Name</strong> — @Model.VaccineName<br />
+            <span class="text-muted">
+                Doctor: @Model.Staff?.FullName<br />
+                Date: @Model.DateGiven?.ToString("MMM dd, yyyy")
+            </span>
+        </p>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </div>
+</form>

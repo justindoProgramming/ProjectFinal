@@ -1,0 +1,76 @@
+﻿@model IEnumerable<PetClinicSystem.Models.MedicalRecord>
+@using PetClinicSystem.Models
+
+@{
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewBag.ActiveMenu = "Records";
+
+    var list = Model.ToList();
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0">Medical Records</h3>
+            <p class="text-secondary mb-0">Manage patient diagnoses and treatments</p>
+        </div>
+
+        <!-- BUTTON GROUP -->
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="MedicalRecords"
+               asp-action="Archived"
+               class="btn btn-outline-secondary">
+                View Archived Records
+            </a>
+
+            <button class="btn btn-success" type="button" onclick="loadRecordCreate()">
+                <i class="fa-solid fa-plus me-1"></i> New Record
+            </button>
+        </div>
+    </div>
+
+
+    <!-- SEARCH -->
+    <div class="mb-3">
+        <input type="text"
+               class="form-control"
+               placeholder="Search by patient, doctor, diagnosis..."
+               oninput="filterMedicalRecords(this.value)" />
+    </div>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <div id="recordsContainer">
+                    @await Html.PartialAsync("_MedicalRecords", list)
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL SHELLS -->
+<div class="modal fade" id="recordCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="recordCreateContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="recordEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="recordEditContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="recordDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="recordDeleteContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/medicalrecords.js"></script>
+}

@@ -1,0 +1,126 @@
+﻿@{
+    Layout = "_Layout_Staff";
+}
+
+<h3 class="fw-bold mb-4">Dashboard</h3>
+<p class="text-secondary mb-4">Here’s your schedule and recent activity.</p>
+
+<div class="row g-4 mb-4">
+
+    <!-- Today Appointments -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-primary text-white me-3">
+                <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">Today’s Appointments</div>
+                <div class="fw-bold fs-4">@ViewBag.TodayAppointments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-warning text-white me-3">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">Pending</div>
+                <div class="fw-bold fs-4">@ViewBag.PendingAppointments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patients Handled -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4 rounded-4 border-0 d-flex flex-row align-items-center">
+            <div class="icon-circle bg-success text-white me-3">
+                <i class="fa-solid fa-paw"></i>
+            </div>
+            <div>
+                <div class="text-secondary small">Pets Handled</div>
+                <div class="fw-bold fs-4">@ViewBag.TotalPatients</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row g-4">
+
+    <!-- Today's Appointments -->
+    <div class="col-lg-8">
+        <div class="card p-4 shadow-sm rounded-4 border-0">
+
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="fw-bold">Today's Appointments</h5>
+                <a href="/Appointments/Index" class="text-primary fw-semibold">View All</a>
+            </div>
+
+            @if (ViewBag.TodayList.Count == 0)
+            {
+                <p class="text-secondary">No appointments today.</p>
+            }
+            else
+            {
+                foreach (var a in ViewBag.TodayList)
+                {
+                    <div class="appointment-card mb-3 p-3 rounded-3">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <div class="fw-bold">@a.Pet?.Name</div>
+
+                                <div class="text-secondary small">
+                                    @a.Pet?.Species • @(a.Service?.Name ?? a.ServiceName ?? "No Service")
+                                </div>
+
+                                <div class="text-muted small">
+                                    @(
+                                                                a.Slot != null
+                                                                ? $"{a.Slot.StartTime:hh\\:mm} - {a.Slot.EndTime:hh\\:mm}"
+                                                                : "No Slot Assigned"
+                                                                )
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="badge bg-success rounded-pill">
+                                    @a.Status
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+            }
+
+        </div>
+    </div>
+
+
+    <!-- Recent Patients -->
+    <div class="col-lg-4">
+        <div class="card p-4 shadow-sm rounded-4 border-0">
+
+            <h5 class="fw-bold mb-3">Recent Pets</h5>
+
+            @foreach (var r in ViewBag.RecentPatients)
+            {
+                <div class="patient-card d-flex justify-content-between p-3 rounded-3 mb-2">
+                    <div>
+                        <div class="fw-bold">@r.Pet?.Name</div>
+                        <div class="text-secondary small">@r.Pet?.Species</div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+</div>

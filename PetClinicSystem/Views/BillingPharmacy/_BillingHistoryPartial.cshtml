@@ -1,0 +1,68 @@
+﻿@model PetClinicSystem.Models.Billing
+
+<div class="receipt-container shadow p-4 rounded-4">
+
+    <h3 class="text-center fw-bold mb-0">St. Paul Pet Clinic</h3>
+    <p class="text-center text-secondary mb-2">Official Receipt</p>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6">
+            <p><b>Pet:</b> @Model.Pet.Name</p>
+            <p><b>Owner:</b> @Model.Pet.Owner.FullName</p>
+        </div>
+        <div class="col-md-6">
+            <p><b>Staff:</b> @Model.Staff.FullName</p>
+            <p><b>Date:</b> @Model.BillingDate.ToString("MMM dd, yyyy hh:mm tt")</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <table class="table table-borderless receipt-table">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th class="text-end">Price</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>@Model.ServiceName</td>
+                <td class="text-end">₱@Model.Total</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h4 class="fw-bold text-end">Total: ₱@Model.Total</h4>
+
+    <button onclick="window.print()"
+            class="btn btn-primary mt-3 w-100">
+        <i class="fa-solid fa-print me-2"></i> Print / Save as PDF
+    </button>
+
+</div>
+
+<style>
+    .receipt-container {
+        max-width: 450px;
+        margin: auto;
+        background: white;
+    }
+
+    .receipt-table td {
+        padding: 6px 0;
+    }
+    @@media print {
+        .btn {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+    }
+</style>

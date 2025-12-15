@@ -1,0 +1,305 @@
+﻿@model PetClinicSystem.Models.Schedule
+@using PetClinicSystem.Models
+
+@{
+    var pets = ViewBag.Pets as List<Pet> ?? new List<Pet>();
+    var staff = ViewBag.Staff as List<Account> ?? new List<Account>();
+    var services = ViewBag.Services as List<Service> ?? new List<Service>();
+
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+
+    int currentSlotId = Model.SlotId ?? 0;
+    string currentStatus = Model.Status?.ToLower() ?? "pending";
+
+    bool isConfirmed = currentStatus == "confirmed";
+    bool isCompleted = currentStatus == "completed";
+    bool isCancelled = currentStatus == "cancelled";
+
+    // Lock edits when appointment is confirmed/completed/cancelled
+    bool lockStatus = isConfirmed || isCompleted || isCancelled;
+}
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Edit Appointment</h5>
+    <button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="ScheduleId" />
+    <input type="hidden" name="SlotId" id="selectedSlotIdEdit" value="@currentSlotId" />
+
+    <div class="modal-body">
+        <div class="row g-3">
+
+            <!-- PET -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Pet</label>
+
+                @if (isCancelled)
+                {
+                    <!-- disabled select for cancelled + hidden value for submission -->
+                    <select class="form-select" disabled>
+                        @foreach (var p in pets)
+                        {
+                            if (p.PetId == Model.PetId)
+                            {
+                                <option value="@p.PetId" selected>@p.PetCode - @p.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@p.PetId">@p.PetCode - @p.Name</option>
+                            }
+                        }
+                    </select>
+                    <input type="hidden" name="PetId" value="@Model.PetId" />
+                }
+                else
+                {
+                    <select asp-for="PetId" class="form-select" required>
+                        @foreach (var p in pets)
+                        {
+                            if (p.PetId == Model.PetId)
+                            {
+                                <option value="@p.PetId" selected>@p.PetCode - @p.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@p.PetId">@p.PetCode - @p.Name</option>
+                            }
+                        }
+                    </select>
+                }
+            </div>
+
+            <!-- STAFF -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Assigned Staff</label>
+
+                @if (isCancelled)
+                {
+                    <select class="form-select" disabled>
+                        @foreach (var s in staff)
+                        {
+                            if (s.AccountId == Model.StaffId)
+                            {
+                                <option value="@s.AccountId" selected>@s.FullName</option>
+                            }
+                            else
+                            {
+                                <option value="@s.AccountId">@s.FullName</option>
+                            }
+                        }
+                    </select>
+                    <input type="hidden" name="StaffId" value="@Model.StaffId" />
+                }
+                else
+                {
+                    <select asp-for="StaffId" class="form-select" required>
+                        @foreach (var s in staff)
+                        {
+                            if (s.AccountId == Model.StaffId)
+                            {
+                                <option value="@s.AccountId" selected>@s.FullName</option>
+                            }
+                            else
+                            {
+                                <option value="@s.AccountId">@s.FullName</option>
+                            }
+                        }
+                    </select>
+                }
+            </div>
+
+            <!-- SERVICE -->
+            <div class="col-12">
+                <label class="form-label fw-semibold">Purpose</label>
+
+                @if (isCancelled)
+                {
+                    <select class="form-select" disabled>
+                        @foreach (var grp in services.GroupBy(x => x.Category))
+                        {
+                            <optgroup label="@grp.Key">
+                                @foreach (var svc in grp)
+                                {
+                                    if (svc.ServiceId == Model.ServiceId)
+                                    {
+                                        <option value="@svc.ServiceId" selected>@svc.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@svc.ServiceId">@svc.Name</option>
+                                    }
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                    <input type="hidden" name="ServiceId" value="@Model.ServiceId" />
+                }
+                else
+                {
+                    <select asp-for="ServiceId" id="serviceDropdownEdit" class="form-select" required>
+                        @foreach (var grp in services.GroupBy(x => x.Category))
+                        {
+                            <optgroup label="@grp.Key">
+                                @foreach (var svc in grp)
+                                {
+                                    if (svc.ServiceId == Model.ServiceId)
+                                    {
+                                        <option value="@svc.ServiceId" selected>@svc.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@svc.ServiceId">@svc.Name</option>
+                                    }
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                }
+            </div>
+
+            <!-- DATE -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Date</label>
+
+                @if (isCancelled)
+                {
+                    <input type="date" class="form-control" value="@(Model.ScheduleDateOld?.ToString("yyyy-MM-dd") ?? "")" disabled />
+                    <input type="hidden" name="ScheduleDateOld" value="@(Model.ScheduleDateOld?.ToString("yyyy-MM-dd") ?? "")" />
+                }
+                else
+                {
+                    <input type="date"
+                           asp-for="ScheduleDateOld"
+                           id="appointmentDateEdit"
+                           class="form-control"
+                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           required />
+                }
+            </div>
+
+            <!-- TIME GRID -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Select Time</label>
+
+                @if (isCancelled)
+                {
+                    <div id="timeGridEdit" class="time-grid">
+                        <div class="text-muted small">
+                            @if (Model.Slot != null)
+                            {
+                                @($"{Model.Slot.StartTime:hh\\:mm} - {Model.Slot.EndTime:hh\\:mm}")
+                            }
+                            else
+                            {
+                                <text>-</text>
+                            }
+                        </div>
+                    </div>
+                    @* SlotId hidden already included at top *@
+                }
+                else
+                {
+                    <div id="timeGridEdit" class="time-grid">
+                        <div class="text-muted small">Loading times…</div>
+                    </div>
+                }
+            </div>
+
+            <!-- STATUS -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Status</label>
+
+                @if (role == 0)
+                {
+                    <!-- Clients cannot edit -->
+                    <input type="hidden" asp-for="Status" />
+                    <input class="form-control" value="@Model.Status" readonly />
+                }
+                else
+                {
+                    if (lockStatus)
+                    {
+                        <!-- Locked: show disabled dropdown (for display) + hidden input for submission -->
+                        <select class="form-select" disabled>
+                            @* Render each option and mark the appropriate text, we do not rely on selected attribute here for display value *@
+                            <option>Confirmed</option>
+                            <option>Urgent</option>
+                            <option>Cancelled</option>
+                            <option>Completed</option>
+                        </select>
+
+                        <input type="hidden" name="Status" value="@Model.Status" />
+                    }
+                    else
+                    {
+                        <!-- Editable: disable Pending unless we're already pending -->
+                        <select asp-for="Status" class="form-select">
+                            @if (currentStatus == "pending")
+                            {
+                                <option value="Pending" selected>Pending</option>
+                            }
+                            else
+                            {
+                                <option value="Pending" disabled>Pending</option>
+                            }
+
+                            @if (currentStatus == "confirmed")
+                            {
+                                <option value="Confirmed" selected>Confirmed</option>
+                            }
+                            else
+                            {
+                                <option value="Confirmed">Confirmed</option>
+                            }
+
+                            @if (currentStatus == "urgent")
+                            {
+                                <option value="Urgent" selected>Urgent</option>
+                            }
+                            else
+                            {
+                                <option value="Urgent">Urgent</option>
+                            }
+
+                            @if (currentStatus == "cancelled")
+                            {
+                                <option value="Cancelled" selected>Cancelled</option>
+                            }
+                            else
+                            {
+                                <option value="Cancelled">Cancelled</option>
+                            }
+
+                            @if (currentStatus == "completed")
+                            {
+                                <option value="Completed" selected>Completed</option>
+                            }
+                            else
+                            {
+                                <option value="Completed">Completed</option>
+                            }
+                        </select>
+                    }
+                }
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+
+        @if (isCancelled)
+        {
+            <button class="btn btn-primary" type="button" disabled>Save Changes</button>
+        }
+        else
+        {
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+        }
+    </div>
+</form>

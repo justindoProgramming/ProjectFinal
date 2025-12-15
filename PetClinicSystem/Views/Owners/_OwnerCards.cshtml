@@ -1,0 +1,49 @@
+﻿@model List<PetClinicSystem.Models.Owner>
+
+<div class="col-12 text-muted" style="display:@(Model.Any() ? "none" : "block")">
+    No owners found.
+</div>
+
+@foreach (var owner in Model)
+{
+    var petCount = owner.Pets?.Count ?? 0;
+
+    <div class="col-12 col-md-6 col-xl-4 owner-card-wrapper">
+        <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h5 class="fw-bold mb-0">@owner.FullName</h5>
+                    <small class="text-secondary">@owner.Email</small>
+                </div>
+                <span class="badge bg-success-subtle text-success">
+                    @petCount @((petCount == 1) ? "pet" : "pets")
+                </span>
+            </div>
+
+            <div class="text-secondary small mb-3">
+                <div><i class="fa-solid fa-phone me-1"></i> @owner.PhoneNumber</div>
+                <div><i class="fa-solid fa-location-dot me-1"></i> @owner.Address</div>
+            </div>
+
+            <div class="d-flex gap-2 pt-2 border-top">
+                <button class="btn btn-light flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-2"
+                        onclick="loadOwnerView(@owner.OwnerId)">
+                    <i class="fa-regular fa-eye"></i>
+                    <span class="fw-semibold">View</span>
+                </button>
+
+                <button class="btn btn-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2 py-2"
+                        onclick="loadOwnerEdit(@owner.OwnerId)">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                    <span class="fw-semibold">Edit</span>
+                </button>
+
+                <button class="btn btn-outline-danger rounded-circle ms-1"
+                        style="width:40px;height:40px"
+                        onclick="loadOwnerDelete(@owner.OwnerId)">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+}

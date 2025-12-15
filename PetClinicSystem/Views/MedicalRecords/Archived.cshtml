@@ -1,0 +1,30 @@
+﻿@model List<PetClinicSystem.Models.MedicalRecord>
+
+@{
+    
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewBag.IsArchiveList = true;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Archived Medical Records</h4>
+
+        <a asp-controller="MedicalRecords"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Active Records
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <div id="recordsContainer">
+        @Html.Partial("_MedicalRecords", Model)
+    </div>
+</div>

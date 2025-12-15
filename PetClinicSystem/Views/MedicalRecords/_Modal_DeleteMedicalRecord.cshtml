@@ -1,0 +1,41 @@
+﻿@model PetClinicSystem.Models.MedicalRecord
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold text-warning">Archive Medical Record</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form id="deleteRecordForm"
+      method="post"
+      action="@Url.Action("DeleteConfirmed", "MedicalRecords")">
+
+    <input type="hidden" name="id" value="@Model.RecordId" />
+
+    <div class="modal-body">
+        <p>
+            Are you sure you want to archive this medical record for
+            <strong>@Model.Pet?.Name</strong>?
+        </p>
+        <p class="text-muted small mb-0">
+            It will be moved to <strong>Archived Records</strong> and can be
+            restored later. It will not be permanently deleted.
+        </p>
+
+        <ul class="mt-3 small">
+            <li><strong>Owner:</strong> @Model.Pet?.Owner?.FullName</li>
+            <li><strong>Doctor:</strong> @Model.Staff?.FullName</li>
+            <li><strong>Date:</strong> @(Model.Date?.ToString("MMM dd, yyyy") ?? "-")</li>
+            <li><strong>Diagnosis:</strong> @Model.Diagnosis</li>
+        </ul>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary"
+                data-bs-dismiss="modal">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-warning">
+            Archive
+        </button>
+    </div>
+</form>

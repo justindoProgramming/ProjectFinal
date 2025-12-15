@@ -1,0 +1,108 @@
+﻿@model PetClinicSystem.Models.Account
+@{
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewBag.ActiveMenu = "Settings";
+}
+
+<div class="container-fluid py-4">
+
+    <h3 class="fw-bold mb-1">Settings</h3>
+    <p class="text-secondary mb-4">Manage your profile and account preferences.</p>
+
+    <div class="row g-4">
+
+        <!-- Profile card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">My Profile</h5>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success text-white d-flex align-items-center justify-content-center rounded-circle me-3"
+                             style="width:48px;height:48px;">
+                            @Model.FullName?[0]
+                        </div>
+                        <div>
+                            <div class="fw-semibold">@Model.FullName</div>
+                            <div class="text-muted small">@Model.Email</div>
+                            <span class="badge rounded-pill bg-light text-dark mt-1">
+                                @(Model.IsAdmin == 1 ? "Admin" : Model.IsAdmin == 2 ? "Staff" : "Client")
+                            </span>
+                        </div>
+                    </div>
+
+                    <dl class="row small mb-3">
+                        <dt class="col-sm-4 text-muted">Username</dt>
+                        <dd class="col-sm-8">@Model.Username</dd>
+
+                        <dt class="col-sm-4 text-muted">Status</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">Inactive</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4 text-muted">Member since</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("MMM dd, yyyy")</dd>
+                    </dl>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-outline-primary" onclick="openEditProfile()">
+                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profile
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="openChangePassword()">
+                            <i class="fa-solid fa-key me-1"></i> Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Future settings placeholder -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">System Preferences</h5>
+                    <p class="text-muted small">
+                        You can expand this section later for clinic information,
+                        appointment defaults, and notification preferences.
+                    </p>
+
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">Email notifications</div>
+                                <div class="text-muted">Receive alerts about appointments and billing.</div>
+                            </div>
+                            <span class="badge bg-light text-muted">Coming soon</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">Clinic profile</div>
+                                <div class="text-muted">Logo, address, and contact information.</div>
+                            </div>
+                            <span class="badge bg-light text-muted">Coming soon</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal shell -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content" id="settingsModalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/settings.js"></script>
+}

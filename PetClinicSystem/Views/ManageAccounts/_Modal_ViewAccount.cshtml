@@ -1,0 +1,43 @@
+﻿@model PetClinicSystem.Models.Account
+
+@functions {
+    string RoleName(int role)
+    {
+        return role == 1 ? "Administrator"
+             : role == 2 ? "Staff"
+             : "Client";
+    }
+}
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">User Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <h5 class="fw-bold mb-1">@Model.FullName</h5>
+    <p class="mb-1 text-muted">@Model.Email</p>
+    <p class="mb-2">
+        <span class="badge @(Model.IsAdmin == 1 ? "bg-primary" : Model.IsAdmin == 2 ? "bg-info text-dark" : "bg-secondary")">
+            @RoleName(Model.IsAdmin)
+        </span>
+        <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary") ms-1">
+            @(Model.IsActive ? "Active" : "Inactive")
+        </span>
+    </p>
+
+    <dl class="row mt-3">
+        <dt class="col-sm-3">Username</dt>
+        <dd class="col-sm-9">@Model.Username</dd>
+
+        <dt class="col-sm-3">Created</dt>
+        <dd class="col-sm-9">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Updated</dt>
+        <dd class="col-sm-9">@Model.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+    </dl>
+</div>
+
+<div class="modal-footer border-0">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

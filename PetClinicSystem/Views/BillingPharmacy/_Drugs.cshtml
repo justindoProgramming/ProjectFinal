@@ -1,0 +1,287 @@
+﻿@model List<PetClinicSystem.Models.Drug>
+
+<div class="card shadow-sm p-4 rounded-4">
+
+    <!-- ========================= SUMMARY PANELS ========================= -->
+    @{
+        int total = Model.Count;
+        int outOfStock = Model.Count(d => d.IsOutOfStock);
+        int lowStock = Model.Count(d => d.IsLowStock && !d.IsOutOfStock);
+        int expiringSoon = Model.Count(d => d.IsExpiringSoon && !d.IsExpired);
+        int expired = Model.Count(d => d.IsExpired);
+    }
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md summary-container">
+            <div class="summary-card" onclick="filterPanel('out')">
+                <div class="summary-icon"><i class="fa-solid fa-box-open"></i></div>
+                <div class="summary-title">Out of Stock</div>
+                <div class="summary-value">@outOfStock</div>
+            </div>
+        </div>
+
+        <div class="col-md summary-container">
+            <div class="summary-card" onclick="filterPanel('low')">
+                <div class="summary-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="summary-title">Low Stock</div>
+                <div class="summary-value">@lowStock</div>
+            </div>
+        </div>
+
+        <div class="col-md summary-container">
+            <div class="summary-card" onclick="filterPanel('soon')">
+                <div class="summary-icon"><i class="fa-solid fa-clock"></i></div>
+                <div class="summary-title">Expiring Soon</div>
+                <div class="summary-value">@expiringSoon</div>
+            </div>
+        </div>
+
+        <div class="col-md summary-container">
+            <div class="summary-card" onclick="filterPanel('expired')">
+                <div class="summary-icon"><i class="fa-solid fa-ban"></i></div>
+                <div class="summary-title">Expired</div>
+                <div class="summary-value">@expired</div>
+            </div>
+        </div>
+
+        <div class="col-md summary-container">
+            <div class="summary-card" onclick="filterPanel('all')">
+                <div class="summary-icon"><i class="fa-solid fa-list"></i></div>
+                <div class="summary-title">All Items</div>
+                <div class="summary-value">@total</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ========================= HEADER ========================= -->
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Medication Inventory</h4>
+
+        <button class="btn btn-success px-3" onclick="loadDrugCreate()">
+            <i class="fa-solid fa-plus me-1"></i> Add Medication
+        </button>
+    </div>
+
+    <!-- ========================= SEARCH ========================= -->
+
+    <input type="text"
+           id="drugSearchBox"
+           class="form-control mb-3"
+           placeholder="Search medicine by name, dosage, expiry, or notes..."
+           onkeyup="filterDrugs()" />
+
+    <!-- ========================= TABLE ========================= -->
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name / Dosage</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Min</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Base Price</th>
+                    <th class="text-center">Expiry</th>
+                    <th class="text-center">Added</th>
+                    <th>Restock Notes</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="drugTable">
+
+                @foreach (var d in Model)
+                {
+                    bool isExpired = d.IsExpired;
+                    bool isSoon = d.IsExpiringSoon && !d.IsExpired;
+                    bool isOut = d.IsOutOfStock;
+                    bool isLow = d.IsLowStock && !d.IsOutOfStock;
+
+                    string search = $"{d.DrugName} {d.DosageType} {d.RestockNotes} {d.Quantity} {d.UnitPrice} {d.BasePrice} {d.ExpiryDate:yyyy-MM-dd} {d.DateAdded:yyyy-MM-dd}";
+
+                    <tr class="drug-row"
+                        data-search="@search"
+                        data-out="@isOut"
+                        data-low="@isLow"
+                        data-soon="@isSoon"
+                        data-expired="@isExpired">
+
+                        <!-- Name -->
+                        <td>
+                            <div class="fw-semibold">@d.DrugName</div>
+                            <div class="text-muted small">@d.DosageType</div>
+                        </td>
+
+                        <!-- Stock -->
+                        <td class="text-center">
+                            <span class="badge @(
+                                  isOut ? "bg-danger" :
+                                  isLow ? "bg-warning text-dark" :
+                                  "bg-success")">
+                                @d.Quantity
+                            </span>
+                        </td>
+
+                        <!-- Min Stock -->
+                        <td class="text-center"><span class="badge bg-secondary">@d.MinimumStock</span></td>
+
+                        <!-- Status -->
+                        <td class="text-center">
+                            @if (isOut)
+                            {
+                                <span class="badge bg-danger">Out</span>
+                            }
+                            else if (isLow)
+                            {
+
+                                <span class="badge bg-warning text-dark">Low</span>
+                            }
+
+                            @if (isExpired)
+                            {
+                                <span class="badge bg-dark">Expired</span>
+                            }
+                            else if (isSoon)
+                            {
+
+                                <span class="badge bg-secondary">Soon</span>
+                            }
+                        </td>
+
+                        <!-- Prices -->
+                        <td class="text-end">₱@d.UnitPrice.ToString("0.00")</td>
+                        <td class="text-end">@((d.BasePrice.HasValue) ? $"₱{d.BasePrice.Value:0.00}" : "-")</td>
+
+                        <!-- Expiry -->
+                        <td class="text-center @(isExpired ? "text-danger fw-bold" : "")">
+                            @d.ExpiryDate.ToString("yyyy-MM-dd")
+                        </td>
+
+                        <!-- Added -->
+                        <td class="text-center">@d.DateAdded?.ToString("yyyy-MM-dd")</td>
+
+                        <!-- Notes -->
+                        <td style="max-width:220px;">
+                            <span class="text-muted small">
+                                @(string.IsNullOrWhiteSpace(d.RestockNotes) ? "None" : d.RestockNotes)
+                            </span>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="text-end">
+                            <button class="btn btn-outline-primary btn-sm me-1"
+                                    onclick="loadDrugEdit(@d.DrugId)">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    onclick="loadDrugDelete(@d.DrugId)">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- ========================= CSS ========================= -->
+
+<style>
+    .summary-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: .2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,.12);
+        }
+
+    .summary-icon {
+        font-size: 22px;
+        color: #4b5563;
+        margin-bottom: 5px;
+    }
+
+    .summary-title {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .summary-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+        margin-top: 2px;
+    }
+
+    .highlight-row {
+        animation: glow 1s ease-in-out infinite alternate;
+    }
+    @@keyframes glow {
+        from {
+            background-color: #fffbe6;
+        }
+
+        to {
+            background-color: #fff3cd;
+        }
+    }
+</style>
+
+<!-- ========================= JS FILTERS ========================= -->
+
+<script>
+    function filterPanel(type) {
+        document.querySelectorAll(".drug-row").forEach(row => {
+            row.classList.remove("highlight-row");
+
+            let isOut = row.dataset.out === "true";
+            let isLow = row.dataset.low === "true";
+            let isSoon = row.dataset.soon === "true";
+            let isExpired = row.dataset.expired === "true";
+
+            let show = true;
+
+            switch (type) {
+                case "out": show = isOut; break;
+                case "low": show = isLow; break;
+                case "soon": show = isSoon; break;
+                case "expired": show = isExpired; break;
+                case "all": show = true; break;
+            }
+
+            row.style.display = show ? "" : "none";
+            if (show) row.classList.add("highlight-row");
+        });
+    }
+
+    function filterDrugs() {
+        let term = document.getElementById("drugSearchBox").value.toLowerCase();
+
+        document.querySelectorAll(".drug-row").forEach(row => {
+            row.classList.remove("highlight-row");
+            let text = row.dataset.search.toLowerCase();
+            let show = text.includes(term);
+
+            row.style.display = show ? "" : "none";
+            if (show) row.classList.add("highlight-row");
+        });
+    }
+</script>

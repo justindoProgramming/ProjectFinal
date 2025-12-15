@@ -1,0 +1,138 @@
+﻿@model List<PetClinicSystem.Models.Billing>
+
+@{
+    Layout = null;
+    var first = Model.FirstOrDefault();
+    if (first == null)
+    {
+        <h3 class="text-center text-danger">No receipt data available.</h3>
+        return;
+    }
+
+    decimal grandTotal = Model.Sum(x => x.Total);
+}
+
+<div class="receipt-container shadow p-4 rounded-4">
+
+    <!-- ====== HEADER ====== -->
+    <div class="text-center mb-3">
+        <img src="/images/logo.jpg" class="clinic-logo" alt="Clinic Logo" />
+        <h3 class="fw-bold mt-2 mb-0">St. Paul Pet Clinic</h3>
+        <p class="text-secondary">Veterinary Care • Pharmacy • Laboratory</p>
+    </div>
+
+    <hr />
+
+    <!-- ====== PATIENT + OWNER ====== -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p><strong>Pet:</strong> @first.Pet.Name</p>
+            <p><strong>Owner:</strong> @first.Pet.Owner.FullName</p>
+            <p><strong>Transaction ID:</strong> @first.TransactionId</p>
+        </div>
+
+        <div class="col-md-6 text-end">
+            <p><strong>Staff:</strong> @first.Staff.FullName</p>
+            <p><strong>Date:</strong> @first.BillingDate.ToString("MMM dd, yyyy • hh:mm tt")</p>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- ====== SERVICE TABLE ====== -->
+    <table class="table table-bordered receipt-table">
+        <thead class="table-light">
+            <tr>
+                <th>Service</th>
+                <th style="width:100px" class="text-center">Qty</th>
+                <th style="width:120px" class="text-end">Price</th>
+                <th style="width:140px" class="text-end">Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ServiceName</td>
+                    <td class="text-center">@item.Quantity</td>
+                    <td class="text-end">₱@item.ServicePrice.ToString("N2")</td>
+                    <td class="text-end">₱@item.Total.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4 class="fw-bold text-end mt-3">Grand Total: ₱@grandTotal.ToString("N2")</h4>
+
+    <hr />
+
+    <!-- ====== FOOTER ====== -->
+    <div class="mb-3">
+        <p class="small text-secondary">
+            Thank you for trusting St. Paul Pet Clinic.
+            If you have any questions about this receipt, please contact us.
+        </p>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col text-center">
+            <p class="signature-line"></p>
+            <span class="small">Owner's Signature</span>
+        </div>
+        <div class="col text-center">
+            <p class="signature-line"></p>
+            <span class="small">Veterinary Staff</span>
+        </div>
+    </div>
+
+    <button class="btn btn-primary w-100 mt-4" onclick="window.print()">
+        <i class="fa-solid fa-print me-2"></i> Print / Save as PDF
+    </button>
+</div>
+
+<style>
+    .receipt-container {
+        max-width: 700px;
+        margin: auto;
+        background: #ffffff;
+        border-radius: 12px;
+    }
+
+    .clinic-logo {
+        height: 60px;
+        object-fit: contain;
+    }
+
+    .receipt-table th, .receipt-table td {
+        padding: 10px;
+        font-size: 15px;
+    }
+
+    .signature-line {
+        border-bottom: 1px solid #999;
+        width: 80%;
+        margin: 20px auto 5px;
+        height: 20px;
+    }
+
+    @@media print {
+        .btn {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .receipt-container {
+            box-shadow: none !important;
+        }
+    }
+</style>
+
+<script>
+    window.onload = function () {
+        window.print();
+    };
+</script>

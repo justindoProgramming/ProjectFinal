@@ -1,0 +1,185 @@
+﻿@using PetClinicSystem.Models
+@using PetClinicSystem.Models.ViewModels
+@model ClientRecordsViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_Client.cshtml";
+    ViewBag.ActiveMenu = "Records";
+
+    var pets = Model.Pets ?? new List<Pet>();
+    var medical = Model.MedicalRecords ?? new List<MedicalRecord>();
+    var prescriptions = Model.Prescriptions ?? new List<Prescription>();
+    var vaccinations = Model.Vaccinations ?? new List<Vaccination>();
+}
+
+<div class="container py-4">
+
+    <h3 class="fw-bold mb-4">My Pet Medical Records</h3>
+
+    <!-- PET LIST -->
+    <div class="mb-4">
+        <h5 class="fw-semibold mb-2">Your Pets</h5>
+
+        <div class="row g-3">
+            @if (!pets.Any())
+            {
+                <p class="text-secondary">No pets found.</p>
+            }
+            else
+            {
+                @foreach (var p in pets)
+                {
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 rounded-4 p-3">
+                            <h5 class="fw-bold">@p.Name</h5>
+                            <div class="text-primary small fw-semibold">@p.PetCode</div>
+                            <div class="text-secondary small">@p.Species • @p.Breed</div>
+
+                            <div class="mt-2 small">
+                                <strong>Gender:</strong> @p.Gender <br />
+                                <strong>Color:</strong> @p.ColorMarkings
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- MEDICAL RECORDS -->
+    <div class="mb-4">
+        <h5 class="fw-semibold mb-3">
+            <i class="fa-solid fa-file-medical text-success me-2"></i>
+            Medical Records
+        </h5>
+
+        @if (!medical.Any())
+        {
+            <p class="text-secondary">No medical records found.</p>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var m in medical)
+                {
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 rounded-4 p-3">
+
+                            <h5 class="fw-bold">@m.Pet?.Name</h5>
+                            <small class="text-secondary">@m.Date?.ToString("MMM dd, yyyy")</small>
+
+                            <div class="mt-3 small">
+                                <strong>Diagnosis:</strong>
+                                <div>@m.Diagnosis</div>
+
+                                <strong class="mt-2 d-block">Treatment:</strong>
+                                <div>@m.Treatment</div>
+
+                                <strong class="mt-2 d-block">Description:</strong>
+                                <div>@m.Description</div>
+                            </div>
+
+                            @if (m.Prescription != null)
+                            {
+                                <div class="mt-3 bg-light p-2 rounded small">
+                                    <strong>Linked Prescription:</strong>
+                                    <div>@m.Prescription.Medication</div>
+                                </div>
+                            }
+
+                            @if (m.Vaccination != null)
+                            {
+                                <div class="mt-3 bg-light p-2 rounded small">
+                                    <strong>Linked Vaccination:</strong>
+                                    <div>@m.Vaccination.VaccineName</div>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <!-- PRESCRIPTIONS -->
+    <div class="mb-4">
+        <h5 class="fw-semibold mb-3">
+            <i class="fa-solid fa-prescription-bottle-medical text-success me-2"></i>
+            Prescriptions
+        </h5>
+
+        @if (!prescriptions.Any())
+        {
+            <p class="text-secondary">No prescriptions found.</p>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var p in prescriptions)
+                {
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 rounded-4 p-3">
+
+                            <h5 class="fw-bold">@p.Pet?.Name</h5>
+                            <small class="text-secondary">@p.Date.ToString("MMM dd, yyyy")</small>
+
+                            <div class="mt-3 small">
+                                <strong>Medication:</strong> @p.Medication <br />
+                                <strong>Dosage:</strong> @p.Dosage <br />
+                                <strong>Frequency:</strong> @p.Frequency <br />
+                                <strong>Duration:</strong> @p.Duration days <br />
+                                <strong>Instructions:</strong> @p.Notes
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    <!-- VACCINATIONS -->
+    <div class="mb-4">
+        <h5 class="fw-semibold mb-3">
+            <i class="fa-solid fa-syringe text-success me-2"></i>
+            Vaccinations
+        </h5>
+
+        @if (!vaccinations.Any())
+        {
+            <p class="text-secondary">No vaccinations found.</p>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var v in vaccinations)
+                {
+                    <div class="col-md-6">
+                        <div class="card shadow-sm border-0 rounded-4 p-3">
+
+                            <h5 class="fw-bold">@v.Pet?.Name</h5>
+
+                            <small class="text-secondary">
+                                Given: @v.DateGiven?.ToString("MMM dd, yyyy")
+                            </small>
+
+                            <div class="mt-3 small">
+                                <strong>Vaccine:</strong> @v.VaccineName <br />
+                                <strong>Next Due:</strong> @v.NextDueDate?.ToString("MMM dd, yyyy")
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+</div>

@@ -1,0 +1,337 @@
+﻿<script>
+    let cart = [];
+    let allServices = [];
+    let currentCategory = "all";
+
+    /* ===============================
+       CATEGORY ICONS
+    ================================*/
+    const icons = {
+        consultation: '<i class="fa-solid fa-stethoscope"></i>',
+        vaccination: '<i class="fa-solid fa-syringe"></i>',
+        grooming: '<i class="fa-solid fa-scissors"></i>',
+        laboratory: '<i class="fa-solid fa-flask"></i>',
+        medicine: '<i class="fa-solid fa-pills"></i>',
+        other: '<i class="fa-solid fa-tag"></i>'
+    };
+
+    function normalizeCategory(cat) {
+        if (!cat) return "other";
+        cat = cat.toLowerCase();
+
+        if (cat.includes("consult")) return "consultation";
+        if (cat.includes("vacc")) return "vaccination";
+        if (cat.includes("groom")) return "grooming";
+        if (cat.includes("lab") || cat.includes("test")) return "laboratory";
+        if (cat.includes("drug") || cat.includes("med")) return "medicine";
+
+        return "other";
+    }
+
+    /* ===============================
+       LOAD SERVICES
+    ================================*/
+    function loadServices() {
+        $.get("/BillingPharmacy/GetServices", function (data) {
+            allServices = data.map(s => ({
+                name: s.name,
+                price: s.price,
+                rawCategory: s.category,
+                category: normalizeCategory(s.category)
+            }));
+
+            buildCategoryTabs();
+            renderServices("all");
+        });
+    }
+
+    /* ===============================
+       CATEGORY MENU
+    ================================*/
+    function buildCategoryTabs() {
+        let html = "";
+        const categories = ["all", ...new Set(allServices.map(s => s.category))];
+
+        categories.forEach(cat => {
+            html += `
+                <li class="nav-item">
+                    <button class="category-item btn btn-light"
+                            onclick="renderServices('${cat}', this)">
+                        ${icons[cat] || icons.other} ${cat.toUpperCase()}
+                    </button>
+                </li>`;
+        });
+
+        $("#categoryMenu").html(html);
+        $("#categoryMenu .category-item").first().addClass("active");
+    }
+
+    /* ===============================
+       RENDER SERVICES
+    ================================*/
+    function renderServices(cat, btn) {
+        currentCategory = cat;
+
+        $("#categoryMenu .category-item").removeClass("active");
+        if (btn) $(btn).addClass("active");
+
+        let list = cat === "all"
+            ? allServices
+            : allServices.filter(s => s.category === cat);
+
+        let html = "";
+        list.forEach(s => {
+            html += `
+            <div class="col-md-4">
+                <div class="service-card" onclick="addToCart('${s.name}', ${s.price}, '${s.rawCategory}')">
+                    <div class="service-title">${s.name}</div>
+                    <div class="service-price">₱${s.price}</div>
+                </div>
+            </div>`;
+        });
+
+        $("#serviceGrid").html(html);
+    }
+
+    /* ===============================
+       SEARCH BAR FILTER
+    ================================*/
+    $("#searchServices").on("input", function () {
+        let term = $(this).val().toLowerCase();
+
+        let list = allServices.filter(s =>
+            s.name.toLowerCase().includes(term)
+            || s.rawCategory.toLowerCase().includes(term)
+        );
+
+        let html = "";
+        list.forEach(s => {
+            html += `
+            <div class="col-md-4">
+                <div class="service-card" onclick="addToCart('${s.name}', ${s.price}, '${s.rawCategory}')">
+                    <div class="service-title">${s.name}</div>
+                    <div class="service-price">₱${s.price}</div>
+                </div>
+            </div>`;
+        });
+
+        $("#serviceGrid").html(html);
+    });
+
+    /* ===============================
+       QUANTITY RULES
+    ================================*/
+    function maxQty(category, name) {
+        category = category.toLowerCase();
+        name = name.toLowerCase();
+
+        if (category.includes("consult") || category.includes("groom") || category.includes("vacc"))
+            return 1;
+
+        if (category.includes("drug") || name.includes("tablet") || name.includes("capsule"))
+            return 10;
+
+        return 1;
+    }
+
+    /* ===============================
+       ADD TO CART
+    ================================*/
+    function addToCart(name, price, category) {
+        let existing = cart.find(x => x.name === name);
+        let limit = maxQty(category, name);
+
+        if (existing) {
+            if (existing.quantity >= limit) return showToast(`Limit reached: max ${limit}`);
+            existing.quantity++;
+            existing.total = existing.quantity * existing.price;
+        } else {
+            cart.push({
+                name,
+                price,
+                category,
+                quantity: 1,
+                total: price
+            });
+        }
+
+        renderCart();
+        updateTotals();
+    }
+
+    /* ===============================
+       CART RENDERING
+    ================================*/
+    function renderCart() {
+        let html = "";
+
+        cart.forEach((item, i) => {
+            let limit = maxQty(item.category, item.name);
+
+            html += `
+            <tr>
+                <td>${item.name}</td>
+                <td>₱${item.price}</td>
+                <td>
+                    <input type="number" min="1" max="${limit}" value="${item.quantity}"
+                           onchange="updateQty(${i}, this.value)"
+                           class="form-control form-control-sm" />
+                </td>
+                <td>₱${item.total}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="removeItem(${i})">X</button>
+                </td>
+            </tr>`;
+        });
+
+        $("#cartTable").html(html);
+    }
+
+    /* ===============================
+       UPDATE QTY
+    ================================*/
+    function updateQty(index, qty) {
+        qty = parseInt(qty);
+        let item = cart[index];
+        let limit = maxQty(item.category, item.name);
+
+        if (qty < 1) qty = 1;
+        if (qty > limit) qty = limit;
+
+        item.quantity = qty;
+        item.total = item.price * qty;
+
+        renderCart();
+        updateTotals();
+    }
+
+    /* ===============================
+       REMOVE ITEM
+    ================================*/
+    function removeItem(i) {
+        cart.splice(i, 1);
+        renderCart();
+        updateTotals();
+    }
+
+    /* ===============================
+       UPDATE TOTALS
+    ================================*/
+    function updateTotals() {
+        let subtotal = cart.reduce((sum, x) => sum + x.total, 0);
+        $("#subtotal").text("₱" + subtotal.toFixed(2));
+    }
+
+    /* ===============================
+       CHECKOUT (FINAL VERSION)
+    ================================*/
+    function checkoutPOS() {
+        let petId = $("#petSelect").val();
+        let staffId = $("#staffId").val();
+
+        if (!petId) return showToast("Select a pet first.");
+        if (cart.length === 0) return showToast("Cart is empty.");
+
+        let payload = cart.map(x => ({
+            petId,
+            staffId,
+            serviceName: x.name,
+            servicePrice: x.price,
+            quantity: x.quantity,
+            total: x.total
+        }));
+
+        $.ajax({
+            url: "/BillingPharmacy/SaveTransaction",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+
+            success: function (res) {
+
+                showToast("Payment Successful!");
+
+                // Auto-open receipt
+                setTimeout(() => {
+                   window.open("/BillingPharmacy/DownloadPdf?id=" + res.transactionId);
+                }, 300);
+
+                // Reset POS
+                cart = [];
+                renderCart();
+                updateTotals();
+                $("#petSelect").val("");
+            }
+        });
+    }
+
+        function submitNewService(e) {
+        e.preventDefault();
+
+        let name = $("#newServiceName").val().trim();
+        let category = $("#newServiceCategory").val().trim();
+        let price = parseFloat($("#newServicePrice").val());
+
+        if (!name || !category || !price || price <= 0) {
+            showToast("Please fill in all service fields.", "error");
+            return false;
+        }
+
+        $.ajax({
+            url: "/BillingPharmacy/AddService",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                Name: name,
+                Category: category,
+                Price: price
+            }),
+            success: function (res) {
+                if (res.success) {
+                    showToast("Service added successfully!");
+
+                    // Close modal
+                    $("#addServiceModal").modal("hide");
+
+                    // Clear inputs
+                    $("#newServiceName").val("");
+                    $("#newServiceCategory").val("");
+                    $("#newServicePrice").val("");
+
+                    // Reload services on screen
+                    loadServices();
+                } else {
+                    showToast(res.message, "error");
+                }
+            },
+            error: function () {
+                showToast("Error saving service", "error");
+            }
+        });
+
+        return false;
+    }
+
+        function showToast(message, type = "success") {
+        $("#bpToastMsg").text(message);
+        const toast = new bootstrap.Toast(document.getElementById("bpToast"));
+        toast.show();
+    }
+
+
+
+
+    /* ===============================
+       TOAST FUNCTION
+    ================================*/
+    function showToast(msg) {
+        $("#bpToastMsg").text(msg);
+        const toast = new bootstrap.Toast(document.getElementById("bpToast"));
+        toast.show();
+    }
+
+    /* ===============================
+       INIT
+    ================================*/
+    $(document).ready(loadServices);
+</script>

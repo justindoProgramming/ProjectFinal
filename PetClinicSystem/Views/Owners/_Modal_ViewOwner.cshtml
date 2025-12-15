@@ -1,0 +1,47 @@
+﻿@model PetClinicSystem.Models.Owner
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Owner Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+    <div class="border rounded-4 p-4 shadow-sm">
+        <h6 class="fw-bold mb-2">Basic Info</h6>
+        <div class="text-secondary mb-3">
+            <div><strong>Name:</strong> @Model.FullName</div>
+            <div><strong>Phone:</strong> @Model.PhoneNumber</div>
+            <div><strong>Email:</strong> @Model.Email</div>
+            <div><strong>Address:</strong> @Model.Address</div>
+        </div>
+
+        <hr />
+
+        <h6 class="fw-bold mb-2">Emergency Contacts</h6>
+        <div class="text-secondary mb-3">
+            <div><strong>Contact 1:</strong> @Model.EmergencyContact1</div>
+            <div><strong>Contact 2:</strong> @Model.EmergencyContact2</div>
+        </div>
+
+        <hr />
+
+        <h6 class="fw-bold mb-2">Patients</h6>
+        @if (Model.Pets != null && Model.Pets.Any())
+        {
+            <ul class="mb-0 text-secondary">
+                @foreach (var pet in Model.Pets)
+                {
+                    <li>@pet.Name (@pet.Species)</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">No patients linked to this owner yet.</p>
+        }
+    </div>
+</div>
+
+<div class="modal-footer border-0">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+</div>

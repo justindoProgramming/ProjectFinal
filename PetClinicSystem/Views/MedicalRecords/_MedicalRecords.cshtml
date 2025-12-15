@@ -1,0 +1,105 @@
+﻿@model IEnumerable<PetClinicSystem.Models.MedicalRecord>
+
+@{
+    bool isArchiveList = false;
+    if (ViewBag.IsArchiveList != null)
+    {
+        bool.TryParse(ViewBag.IsArchiveList.ToString(), out isArchiveList);
+    }
+}
+
+<table class="table table-hover align-middle mb-0">
+    <thead class="table-light">
+        <tr>
+            <th style="width: 130px;">Date</th>
+            <th>Patient</th>
+            <th>Owner</th>
+            <th>Doctor / Staff</th>
+            <th>Diagnosis</th>
+            <th>Treatment</th>
+            <th style="width: 180px;" class="text-end"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <tr class="medical-record-row">
+                    <td>
+                        @(item.Date?.ToString("MMM dd, yyyy") ?? "-")
+                    </td>
+                    <td>
+                        @item.Pet?.Name
+                    </td>
+                    <td>
+                        @item.Pet?.Owner?.FullName
+                    </td>
+                    <td>
+                        @item.Staff?.FullName
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(item.Diagnosis))
+                        {
+                            @item.Diagnosis
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(item.Treatment))
+                        {
+                            @item.Treatment
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td class="text-end">
+
+                        @if (!isArchiveList)
+                        {
+                            <!-- ACTIVE LIST: Edit + Archive -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary me-1"
+                                    onclick="loadRecordEdit(@item.RecordId)">
+                                Edit
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-warning"
+                                    onclick="loadRecordDelete(@item.RecordId)">
+                                Archive
+                            </button>
+                        }
+                        else
+                        {
+                            <!-- ARCHIVED LIST: Restore -->
+                            <form method="post"
+                                  action="/MedicalRecords/Restore"
+                                  class="d-inline">
+                                <input type="hidden" name="id" value="@item.RecordId" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-success">
+                                    Restore
+                                </button>
+                            </form>
+                        }
+
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    No medical records found.
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

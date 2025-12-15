@@ -1,0 +1,163 @@
+﻿@model List<PetClinicSystem.Models.Owner>
+
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Owners";
+
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+    bool canManageOwners = (role == 1 || role == 2); // Admin / Staff
+
+    if (role == 1)
+    {
+        Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    }
+    else if (role == 2)
+    {
+        Layout = "~/Views/Shared/_Layout_Staff.cshtml";
+    }
+    else if (role == 0)
+    {
+        Layout = "~/Views/Shared/_Layout_Client.cshtml";
+    }
+}
+
+<div class="container-fluid py-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Owners</h3>
+
+        <!-- SIMPLE GET FORM FOR SEARCH -->
+        <form asp-controller="Owners"
+              asp-action="Index"
+              method="get"
+              class="d-flex gap-2 mb-0">
+
+            <input name="search"
+                   id="searchBox"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   style="max-width:260px"
+                   placeholder="Search by name, email, phone..." />
+
+            @if (canManageOwners)
+            {
+            }
+        </form>
+    </div>
+
+    <div class="row g-3" id="ownerCardsContainer">
+        @await Html.PartialAsync("_OwnerCards", Model)
+    </div>
+</div>
+
+<!-- One reusable modal -->
+<div class="modal fade" id="ownerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="ownerModalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ---------- Toast helper ----------
+        function showOwnerToast(message, isError) {
+            if (!message) return;
+
+            if (!isError && window.showSuccessToast) {
+                window.showSuccessToast(message);
+                return;
+            }
+            if (isError && window.showErrorToast) {
+                window.showErrorToast(message);
+                return;
+            }
+
+            // fallback
+            alert(message);
+        }
+
+        // ---------- Modal loaders (called from _OwnerCards) ----------
+        function loadOwnerCreate() {
+            $("#ownerModalContent").load("/Owners/CreateOwner", function () {
+                const modalEl = document.getElementById("ownerModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                wireOwnerForm();
+            });
+        }
+
+        function loadOwnerView(id) {
+            $("#ownerModalContent").load("/Owners/ViewOwner/" + id, function () {
+                const modalEl = document.getElementById("ownerModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                // view has no form
+            });
+        }
+
+        function loadOwnerEdit(id) {
+            $("#ownerModalContent").load("/Owners/EditOwner/" + id, function () {
+                const modalEl = document.getElementById("ownerModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                wireOwnerForm();
+            });
+        }
+
+        function loadOwnerDelete(id) {
+            $("#ownerModalContent").load("/Owners/DeleteOwner/" + id, function () {
+                const modalEl = document.getElementById("ownerModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                wireOwnerForm(); // delete also posts
+            });
+        }
+
+        // ---------- Wire form inside modal ----------
+        function wireOwnerForm() {
+            var form = $("#ownerModalContent").find("form");
+            if (!form.length) return;
+
+            form.off("submit").on("submit", function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: form.attr("action"),
+                    type: form.attr("method") || "POST",
+                    data: form.serialize(),
+                    success: function (res) {
+                        if (res && res.success) {
+                            showOwnerToast(res.message || "Action completed.", false);
+
+                            const modalEl = document.getElementById("ownerModal");
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+
+                            // simplest way: reload list
+                            location.reload();
+                        } else {
+                            showOwnerToast((res && res.message) || "Something went wrong.", true);
+                        }
+                    },
+                    error: function (xhr) {
+                        var msg = (xhr.responseJSON && xhr.responseJSON.message) ||
+                                  xhr.responseText ||
+                                  "Server error.";
+                        showOwnerToast(msg, true);
+                    }
+                });
+            });
+        }
+
+        // clean stray backdrops
+        document.addEventListener("hidden.bs.modal", function (ev) {
+            if (ev.target.id === "ownerModal") {
+                document.body.classList.remove("modal-open");
+                document.querySelectorAll(".modal-backdrop").forEach(function (el) {
+                    el.remove();
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,197 @@
+/* GENERAL */
+body {
+    background: #f8f9fb;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* GLASS EFFECT */
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+}
+
+/* HERO SECTION */
+.hero-section {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4e9af1, #2d77d1);
+    border: none;
+}
+
+.btn-outline-primary {
+    border-width: 2px;
+    border-radius: 50px;
+}
+
+/* MODAL */
+.modal-content {
+    border-radius: 20px !important;
+}
+
+.form-control {
+    padding: 14px;
+    font-size: 16px;
+}
+
+.form-floating label {
+    opacity: 0.7;
+}
+
+/* NAVBAR */
+.navbar {
+    backdrop-filter: blur(5px);
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #ececec;
+    padding: 24px 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.sidebar-logo {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.menu-title {
+    font-size: .75rem;
+    text-transform: uppercase;
+    color: #8b8b8b;
+    margin-bottom: 10px;
+    padding-left: 8px;
+}
+
+.nav-link-custom {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #4a4a4a;
+    font-weight: 500;
+}
+
+    .nav-link-custom:hover {
+        background: #f2f6ff;
+        color: #3d7cff;
+    }
+
+.nav-active {
+    background: #eaf1ff;
+    color: #3d7cff !important;
+}
+
+/* TOPBAR */
+.topbar {
+    height: 70px;
+    background: #fff;
+    border-bottom: 1px solid #ececec;
+    padding-left: 280px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 30px;
+}
+
+.content-area {
+    margin-left: 280px;
+    padding: 30px;
+}
+
+.user-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #3d7cff;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+}
+
+/* FOOTER LOGOUT */
+.logout-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+}
+
+
+.icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bg-purple {
+    background-color: #9b59b6;
+}
+
+.appointment-card {
+    background: #f8faff;
+    border: 1px solid #e8efff;
+}
+
+.patient-card {
+    background: #f9f9f9;
+    border: 1px solid #ececec;
+}
+
+
+.icon-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.appointment-card {
+    background: #f8faff;
+    border: 1px solid #e8efff;
+}
+
+.patient-card {
+    background: #f9f9f9;
+    border: 1px solid #ececec;
+}
+
+.icon-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.appointment-card {
+    background: #f8faff;
+    border: 1px solid #e8efff;
+}
+
+.patient-card {
+    background: #f9f9f9;
+    border: 1px solid #ececec;
+}
+

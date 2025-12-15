@@ -1,0 +1,116 @@
+﻿@model PetClinicSystem.Models.AccountProfileViewModel
+
+@{
+    var role = Context.Session.GetInt32("UserRole") ?? -1;
+
+    if (role == 1)
+    {
+        Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    }
+    else if (role == 2)
+    {
+        Layout = "~/Views/Shared/_Layout_Staff.cshtml";
+    }
+    else if (role == 0)
+    {
+        Layout = "~/Views/Shared/_Layout_Client.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout_Public.cshtml";
+    }
+
+    ViewBag.ActiveMenu = "Profile";
+}
+
+<div class="container-fluid py-4">
+    <h3 class="fw-bold mb-1">My Profile</h3>
+    <p class="text-secondary mb-4">Update your account information and password.</p>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> Please fix the errors below.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <form asp-action="Profile" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-4">
+
+                    <!-- LEFT: ACCOUNT DETAILS -->
+                    <div class="col-lg-7 border-lg-end">
+                        <h5 class="fw-bold mb-3">Account Details</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Username" class="form-label fw-semibold"></label>
+                            <input asp-for="Username" class="form-control" />
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: CHANGE PASSWORD -->
+                    <div class="col-lg-5">
+                        <h5 class="fw-bold mb-2">Change Password</h5>
+                        <p class="text-secondary small mb-3">
+                            Leave these fields blank if you don’t want to change your password.
+                        </p>
+
+                        <div class="mb-3">
+                            <label asp-for="NewPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="NewPassword" class="form-control" />
+                            <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="alert alert-info small py-2 px-3">
+                            <i class="fa-solid fa-info-circle me-2"></i>
+                            Use a mix of letters and numbers.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+

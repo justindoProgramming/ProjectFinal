@@ -1,0 +1,130 @@
+﻿@model List<PetClinicSystem.Models.Vaccination>
+
+<div class="card shadow-sm p-4 rounded-4">
+
+    <!-- HEADER + ADD BUTTON -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Vaccinations</h4>
+
+        <button class="btn btn-success" onclick="openCreateVaccination()">
+            <i class="fa-solid fa-plus me-2"></i> Add Vaccination
+        </button>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="mb-3">
+        <input type="text"
+               id="vaccinationSearch"
+               class="form-control"
+               placeholder="Search vaccinations..."
+               onkeyup="filterVaccinations()">
+    </div>
+
+    <!-- NO RECORDS -->
+    @if (!Model.Any())
+    {
+        <div class="text-center text-secondary py-4">
+            <i class="fa-regular fa-folder-open fa-2x mb-2"></i>
+            <p>No vaccination records available.</p>
+        </div>
+    }
+    else
+    {
+        <!-- TABLE -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Pet</th>
+                        <th>Owner</th>
+                        <th>Vaccine</th>
+                        <th>Date Given</th>
+                        <th>Next Due Date</th>
+                        <th>Staff</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="vaccinationTable">
+                    @foreach (var v in Model)
+                    {
+                        <tr class="vaccination-row">
+                            <td>@v.Pet.Name</td>
+                            <td>@v.Pet.Owner.FullName</td>
+                            <td>@v.VaccineName</td>
+                            <td>@(v.DateGiven?.ToString("MMM dd, yyyy") ?? "-")</td>
+                            <td>@(v.NextDueDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                            <td>@v.Staff.FullName</td>
+
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            onclick="openViewVaccination(@v.VaccinationId)">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            onclick="openDeleteVaccination(@v.VaccinationId)">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+
+<!-- MODAL TRIGGERS -->
+<script>
+    // SEARCH FILTER
+    function filterVaccinations() {
+        let term = document.getElementById("vaccinationSearch").value.toLowerCase();
+
+        document.querySelectorAll(".vaccination-row").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none";
+        });
+    }
+
+    // OPEN CREATE MODAL
+    function openCreateVaccination() {
+        $("#vaccCreateContent").load("/BillingPharmacy/CreateVaccination", function () {
+            new bootstrap.Modal(document.getElementById("vaccCreateModal")).show();
+        });
+    }
+
+    // OPEN VIEW MODAL
+    function openViewVaccination(id) {
+        $("#vaccViewContent").load("/BillingPharmacy/ViewVaccination/" + id, function () {
+            new bootstrap.Modal(document.getElementById("vaccViewModal")).show();
+        });
+    }
+
+    // OPEN EDIT MODAL
+    function openEditVaccination(id) {
+        $("#vaccEditContent").load("/BillingPharmacy/EditVaccination/" + id, function () {
+            new bootstrap.Modal(document.getElementById("vaccEditModal")).show();
+        });
+    }
+
+    // OPEN DELETE MODAL
+    function openDeleteVaccination(id) {
+        $("#vaccDeleteContent").load("/BillingPharmacy/DeleteVaccination/" + id, function () {
+            new bootstrap.Modal(document.getElementById("vaccDeleteModal")).show();
+        });
+    }
+</script>
+
+<style>
+    .table th {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .table td {
+        font-size: 14px;
+    }
+</style>

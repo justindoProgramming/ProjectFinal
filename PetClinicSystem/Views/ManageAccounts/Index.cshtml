@@ -1,0 +1,135 @@
+﻿@model IEnumerable<PetClinicSystem.Models.Account>
+
+@{
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewBag.ActiveMenu = "ManageAccounts";
+
+    var accountsList = Model.ToList();
+    var totalStaff = accountsList.Count;
+    var activeUsers = accountsList.Count(a => a.IsActive);
+    var vets = accountsList.Count(a => a.IsAdmin == 2);   // example: 2 = Staff/Vet
+}
+
+<div class="container-fluid py-4">
+
+    <!-- HEADER + ADD BUTTON -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0">User Management</h3>
+            <p class="text-secondary mb-0">Manage staff members and their roles</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-success"
+                onclick="loadAccountCreate()">
+            <i class="fa-solid fa-plus me-1"></i> Add account
+        </button>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="mb-3">
+        <input type="text"
+               class="form-control"
+               placeholder="Search by name, email, or role..."
+               oninput="filterAccountCards(this.value)" />
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-primary-subtle text-primary">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="text-secondary small">Accounts</div>
+                        <div class="h4 mb-0 fw-bold">@totalStaff</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-success-subtle text-success">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-secondary small">Active Users</div>
+                        <div class="h4 mb-0 fw-bold">@activeUsers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-circle bg-purple-subtle text-purple">
+                        <i class="fa-solid fa-stethoscope"></i>
+                    </div>
+                    <div>
+                        <div class="text-secondary small">Staff</div>
+                        <div class="h4 mb-0 fw-bold">@vets</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARDS LIST -->
+    <div id="accountsContainer">
+        @await Html.PartialAsync("_AccountCards", accountsList)
+    </div>
+</div>
+
+<!-- MODAL SHELLS -->
+<div class="modal fade" id="accCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="accCreateContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="accViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="accViewContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="accEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="accEditContent"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="accDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="accDeleteContent"></div>
+    </div>
+</div>
+
+<style>
+    .icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .bg-purple-subtle {
+        background-color: #f3e8ff;
+    }
+
+    .text-purple {
+        color: #7c3aed;
+    }
+</style>
+
+@section Scripts {
+    <script src="~/js/accounts.js"></script>
+}

@@ -1,0 +1,48 @@
+﻿@model PetClinicSystem.Models.Owner
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Add Owner</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="createOwnerForm" method="post" action="/Owners/CreateOwner">
+    @Html.AntiForgeryToken()
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Full Name</label>
+                <input name="FullName" class="form-control" required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Phone Number</label>
+                <input name="PhoneNumber" class="form-control" required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Email</label>
+                <input name="Email" type="email" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Address</label>
+                <input name="Address" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Emergency Contact 1</label>
+                <input name="EmergencyContact1" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Emergency Contact 2</label>
+                <input name="EmergencyContact2" class="form-control" />
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success">Add Owner</button>
+    </div>
+</form>

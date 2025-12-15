@@ -1,0 +1,30 @@
+﻿@model PetClinicSystem.Models.Pet
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Pet Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+    <div class="border rounded-4 p-4 shadow-sm">
+
+        <h6 class="fw-bold mb-2">Basic Info</h6>
+        <div class="text-secondary mb-3">
+            <div><strong>Pet Code:</strong> @Model.PetCode</div>
+            <div><strong>Name:</strong> @Model.Name</div>
+            <div><strong>Species:</strong> @Model.Species</div>
+            <div><strong>Breed:</strong> @Model.Breed</div>
+            <div><strong>Gender:</strong> @Model.Gender</div>
+            <div><strong>Birthdate:</strong> @Model.BirthDate.ToString("MMM dd, yyyy")</div>
+            <div><strong>Weight:</strong> @Model.Weight.ToString("0.00") kg</div>
+        </div>
+
+        <h6 class="fw-bold mb-2">Medical History</h6>
+        <p class="text-secondary mb-0">@Model.MedicalHistory</p>
+
+    </div>
+</div>
+
+<div class="modal-footer border-0">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+</div>

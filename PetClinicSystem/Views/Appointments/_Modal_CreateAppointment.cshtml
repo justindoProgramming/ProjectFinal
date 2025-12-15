@@ -1,0 +1,294 @@
+﻿@model PetClinicSystem.Models.Schedule
+@using PetClinicSystem.Models
+
+@{
+    var pets = ViewBag.Pets as List<Pet> ?? new List<Pet>();
+    var staff = ViewBag.Staff as List<Account> ?? new List<Account>();
+    var services = ViewBag.Services as List<Service> ?? new List<Service>();
+    int role = Context.Session.GetInt32("UserRole") ?? -1;
+}
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Create Appointment</h5>
+    <button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-body">
+        <div class="row g-3">
+
+            <!-- PET (filter input + select) -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Pet</label>
+
+                <!-- inline filter like Pets create -->
+                <input id="petFilter" class="form-control mb-2" placeholder="Type to filter pets (code or name)..." autocomplete="off" />
+
+                <select id="petSelect" name="PetId" class="form-select" required>
+                    <option value="">Select a pet…</option>
+                    @foreach (var p in pets)
+                    {
+                        <option value="@p.PetId">@p.PetCode - @p.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="PetId" class="text-danger"></span>
+            </div>
+
+            <!-- STAFF (filter input + select) -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Assigned Staff</label>
+
+                <input id="staffFilter" class="form-control mb-2" placeholder="Type to filter staff..." autocomplete="off" />
+
+                <select id="staffSelect" name="StaffId" class="form-select" required>
+                    <option value="">Select staff…</option>
+                    @foreach (var s in staff)
+                    {
+                        <option value="@s.AccountId">@s.FullName</option>
+                    }
+                </select>
+                <span asp-validation-for="StaffId" class="text-danger"></span>
+            </div>
+
+            <!-- SERVICE -->
+            <div class="col-12">
+                <label class="form-label fw-semibold">Purpose</label>
+                <select name="ServiceId" id="serviceDropdown" class="form-select" required>
+                    <option value="">Select a purpose…</option>
+
+                    @foreach (var group in services.GroupBy(s => s.Category))
+                    {
+                        <optgroup label="@group.Key">
+                            @foreach (var svc in group)
+                            {
+                                <option value="@svc.ServiceId" data-duration="@svc.DurationMinutes">
+                                    @svc.Name
+                                </option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </div>
+
+            <!-- DATE -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Date</label>
+                <input type="date" name="ScheduleDateOld" id="appointmentDate"
+                       class="form-control"
+                       min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                       required />
+            </div>
+
+            <!-- TIME GRID -->
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Select Time</label>
+
+                <div id="timeGrid" class="time-grid">
+                    <div class="text-muted small">Select date & service first</div>
+                </div>
+
+                <input type="hidden" name="SlotId" id="selectedSlotId" required />
+            </div>
+
+            <!-- STATUS -->
+            @if (role == 0)
+            {
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="Status" class="form-select">
+                        <option value="Pending">Pending</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+            }
+            else
+            {
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select name="Status" class="form-select">
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <div class="modal-footer border-0">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success">Create</button>
+    </div>
+</form>
+
+<!-- Inline script: runs when partial inserted (works for AJAX-loaded partials) -->
+<script>
+    (function () {
+
+        // Lightweight select filter (same approach used in Pets create)
+        function setupFilter(filterId, selectId, placeholder) {
+            var filter = document.getElementById(filterId);
+            var select = document.getElementById(selectId);
+
+            // if filter missing, create it above select
+            if (!filter && select) {
+                var input = document.createElement('input');
+                input.id = filterId;
+                input.className = 'form-control mb-2';
+                input.placeholder = placeholder || 'Type to filter...';
+                input.autocomplete = 'off';
+                select.parentNode.insertBefore(input, select);
+                filter = input;
+            }
+            if (!select || !filter) return;
+
+            // Save original options once
+            if (!select._origOptions) {
+                select._origOptions = Array.from(select.options).map(function (o) {
+                    return {
+                        value: o.value,
+                        text: o.text,
+                        selected: o.selected,
+                        disabled: o.disabled
+                    };
+                });
+            }
+
+            // Build filtered options
+            function build(q) {
+                q = (q || '').trim().toLowerCase();
+                select.innerHTML = '';
+
+                // Keep the placeholder (value === "")
+                var placeholderOpt = select._origOptions.find(function (o) { return o.value === ""; });
+                if (placeholderOpt) {
+                    var ph = document.createElement('option');
+                    ph.value = "";
+                    ph.textContent = placeholderOpt.text;
+                    select.appendChild(ph);
+                }
+
+                var matches = select._origOptions.filter(function (o) {
+                    if (!o.value) return false; // skip placeholder
+                    if (!q) return true;
+                    return o.text.toLowerCase().includes(q);
+                });
+
+                if (matches.length === 0) {
+                    var none = document.createElement('option');
+                    none.value = "";
+                    none.textContent = "No matches";
+                    none.disabled = true;
+                    select.appendChild(none);
+                    return;
+                }
+
+                matches.forEach(function (o) {
+                    var opt = document.createElement('option');
+                    opt.value = o.value;
+                    opt.textContent = o.text;
+                    if (o.selected) opt.selected = true;
+                    if (o.disabled) opt.disabled = true;
+                    select.appendChild(opt);
+                });
+            }
+
+            // Debounce for responsiveness
+            var timer = null;
+            filter.addEventListener('input', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    build(filter.value);
+                }, 120);
+            });
+
+            // ArrowDown jumps to select
+            filter.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    select.focus();
+                }
+            });
+
+            // initialize
+            build(filter.value);
+        }
+
+        // Initialize breed dropdown (same as your Pet modal)
+        function initBreedHelpers() {
+            const dogBreeds = [
+                "Aspin","Shih Tzu","Labrador Retriever","Golden Retriever","German Shepherd",
+                "Poodle","Bulldog","Beagle","Pug","Siberian Husky","Chihuahua","Dalmatian","Mixed Breed"
+            ];
+
+            const catBreeds = [
+                "Domestic Shorthair","Domestic Longhair","Persian","Siamese","Maine Coon",
+                "Ragdoll","British Shorthair","Scottish Fold","Bengal","Mixed Breed"
+            ];
+
+            var speciesSelect = document.getElementById("speciesSelectCreate");
+            var breedSelect = document.getElementById("breedSelectCreate");
+            var breedSearch = document.getElementById("breedSearchCreate");
+
+            function getSource(species) {
+                if (species === "Dog") return dogBreeds;
+                if (species === "Cat") return catBreeds;
+                return [];
+            }
+
+            function refreshBreeds() {
+                if (!breedSelect) return;
+
+                var species = speciesSelect ? speciesSelect.value : "";
+                var query = (breedSearch ? breedSearch.value : "").toLowerCase();
+
+                var source = getSource(species);
+                breedSelect.innerHTML = '<option value="">Select breed...</option>';
+
+                source
+                    .filter(function (b) { return b.toLowerCase().includes(query); })
+                    .forEach(function (b) {
+                        var opt = document.createElement('option');
+                        opt.value = b;
+                        opt.textContent = b;
+                        breedSelect.appendChild(opt);
+                    });
+            }
+
+            if (speciesSelect) speciesSelect.addEventListener('change', refreshBreeds);
+            if (breedSearch) breedSearch.addEventListener('input', refreshBreeds);
+
+            // initial call
+            refreshBreeds();
+        }
+
+        // Called when partial is inserted or when modal shown
+        function initCreateAppointmentPartial() {
+            // Setup owner / staff / pet filters
+            setupFilter('petFilter', 'petSelect', 'Type to filter pets (code or name)...');
+            setupFilter('staffFilter', 'staffSelect', 'Type to filter staff...');
+
+            // Breed helpers (if you included breed inputs elsewhere in modal)
+            initBreedHelpers();
+        }
+
+        // Run immediately (works when partial is rendered on server or inline)
+        initCreateAppointmentPartial();
+
+        // Also re-init when the create modal is shown (handles AJAX insertion before show)
+        var createModal = document.getElementById('createModal');
+        if (createModal) {
+            createModal.addEventListener('shown.bs.modal', function () {
+                initCreateAppointmentPartial();
+            });
+        }
+
+        // If you load the partial via jQuery .load(), call initCreateAppointmentPartial()
+        // in the load callback before showing the modal.
+    })();
+</script>

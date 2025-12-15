@@ -1,0 +1,39 @@
+﻿@model PetClinicSystem.Models.Vaccination
+
+<div class="modal-header border-0">
+    <h5 class="modal-title fw-bold">Vaccination Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+    <div class="mb-3">
+        <h5 class="mb-0">@Model.Pet?.Name</h5>
+        <small class="text-muted">@Model.Pet?.Owner?.FullName</small>
+    </div>
+
+    <dl class="row">
+
+        <dt class="col-sm-3">Vaccine</dt>
+        <dd class="col-sm-9">@Model.VaccineName</dd>
+
+        <dt class="col-sm-3">Administered By</dt>
+        <dd class="col-sm-9">@Model.Staff?.FullName</dd>
+
+        <dt class="col-sm-3">Date Given</dt>
+        <dd class="col-sm-9">
+            @(Model.DateGiven?.ToString("MMM dd, yyyy") ?? "-")
+        </dd>
+
+        <dt class="col-sm-3">Next Due Date</dt>
+        <dd class="col-sm-9">
+            @(Model.NextDueDate?.ToString("MMM dd, yyyy") ?? "-")
+        </dd>
+
+    </dl>
+
+</div>
+
+<div class="modal-footer border-0">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

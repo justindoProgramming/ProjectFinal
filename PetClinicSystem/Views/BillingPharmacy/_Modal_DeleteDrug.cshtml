@@ -1,0 +1,28 @@
+﻿@model PetClinicSystem.Models.Drug
+
+<div class="modal-header">
+    <h5 class="modal-title fw-bold text-danger">Delete Drug</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="deleteDrugForm" method="post" action="@Url.Action("DeleteDrugConfirmed", "BillingPharmacy")">
+    @Html.AntiForgeryToken()
+    <input asp-for="DrugId" type="hidden" />
+
+    <div class="modal-body">
+        <p>Are you sure you want to delete the following drug from inventory?</p>
+
+        <ul class="list-unstyled mb-0">
+            <li><strong>Name:</strong> @Model.DrugName</li>
+            <li><strong>Dosage:</strong> @Model.DosageType</li>
+            <li><strong>Quantity:</strong> @Model.Quantity</li>
+            <li><strong>Unit Price:</strong> ₱@Model.UnitPrice.ToString("0.00")</li>
+            <li><strong>Expiry:</strong> @Model.ExpiryDate.ToString("yyyy-MM-dd")</li>
+        </ul>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </div>
+</form>
